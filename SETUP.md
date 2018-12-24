@@ -37,7 +37,7 @@ You should now be able to run tests involving Elasticsearch. Test setup should d
 
 In order to quickly iterate over tests you can run them against your local Elasticsearch (so the tests don't need to spin up and down elasticsearch every time).
 
-Set the local elasticsearch port in your bash environment and your tests will run against your local setup. This is assuming your tests are using `elasticsearch_test_helper.rb`.
+Set the local elasticsearch port in your bash environment and your tests will run against your local setup.
 
 ```shell
 export ELASTICSEARCH_TEST_PORT=9200

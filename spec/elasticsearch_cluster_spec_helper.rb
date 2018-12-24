@@ -11,6 +11,8 @@ module ElasticsearchClusterSpecHelper
   ELASTICSEARCH_TEST_LOCALHOST = "127.0.0.1"
   ELASTICSEARCH_TEST_PORT      = ENV["ELASTICSEARCH_TEST_PORT"]&.to_i || 9250
 
+  # If using Minitest, use Minitest::Hooks.
+
   # `export ELASTICSEARCH_TEST_PORT=9200` to run tests against your local, running Elasticsearch
 
   # If you run into issues with Webmock, make sure to allow local requests
