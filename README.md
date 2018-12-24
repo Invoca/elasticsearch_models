@@ -63,6 +63,9 @@ end
 
 ### Querying for a model
 Queries return a `ElasticsearchModels::QueryResponse` which will contain `raw_response`, `models`, and `errors`.
+* `raw_response`: Full response from elasticsearch query.
+* `models`: Rehydrated models from the query response (based on `_type`).
+* `errors`: Errors that occurred when attempting to rehydrate models.
 
 #### Query by Elasticsearch document id or attributes
 
@@ -99,7 +102,7 @@ DummyElasticSearchModel.where(my_nested_class: { nested_hash_field: { a: 1, b: 2
 # Sort by an attribute
 DummyElasticSearchModel.where(my_string: "Hi", _sort_by: { my_time: :asc })
 
-# Sort by multiple attributes (in the order they're defined)
+# Sort by multiple attributes
 DummyElasticSearchModel.where(_sort_by: [{ my_int: :desc }, { my_time: :asc }])
 
 # Sort by nested classes and hash fields
@@ -107,8 +110,9 @@ DummyElasticSearchModel.where(_sort_by: [{ "my_nested_class.nested_hash_field.a.
 ```
 
 #### Adding pagination to queries
+By default, 10 entries are returned from spot 0.
+
 ```ruby
 # Return 25 entries starting from spot 32
-# By default returns 10 entries from spot 0
 DummyElasticSearchModel.where(_size: 25, _from: 32)
 ```
