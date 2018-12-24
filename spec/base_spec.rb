@@ -244,7 +244,7 @@ RSpec.describe ElasticsearchModels::Base do
         expect(refresh_and_find_search_hit["_source"]).to eq(@default_fields)
       end
 
-      it "validates the model before attempting to insert to Elasticsearch", omeed: true do
+      it "validates the model before attempting to insert to Elasticsearch" do
         expect { DummyElasticSearchModel.create! }.to raise_error(ActiveRecord::RecordInvalid, "Validation failed: My string must be set")
 
         refresh_index
