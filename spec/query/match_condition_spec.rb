@@ -3,7 +3,7 @@
 RSpec.describe ElasticsearchModels::Query::MatchCondition do
   context "Query::MatchCondition" do
     it "returns key and value within match_phrase for non-range and non-hash values" do
-      expect(ElasticsearchModels::Query::MatchCondition.term_for(:a, 1)).to eq({ match_phrase: { a: 1 } })
+      expect(ElasticsearchModels::Query::MatchCondition.term_for(:a, 1)).to eq(match_phrase: { a: 1 })
     end
 
     context "range" do
