@@ -26,11 +26,11 @@ RSpec.describe ElasticsearchModels::Query::MatchCondition do
       end
 
       it "converts time to iso8601 and returns range" do
-        time     = Time.now
+        time     = Time.local(2018, 12, 27, 12, 10)
         min_time = time - 300
         max_time = time + 300
 
-        expected_term = { range: { a: { "gte" => min_time.utc.iso8601, "lte" => max_time.utc.iso8601 } } }
+        expected_term = { range: { a: { "gte" => "2018-12-27T20:05:00Z", "lte" => "2018-12-27T20:15:00Z" } } }
         expect(ElasticsearchModels::Query::MatchCondition.term_for(:a, (min_time..max_time))).to eq(expected_term)
       end
     end
