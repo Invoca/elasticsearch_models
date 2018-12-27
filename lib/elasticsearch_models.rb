@@ -10,7 +10,7 @@ require 'hobo_support'
 require 'elasticsearch'
 
 require 'elasticsearch_models/version'
-require 'elasticsearch_models/deep_compact'
+require 'elasticsearch_models/deep_squash'
 require 'elasticsearch_models/aggregate'
 require 'elasticsearch_models/base'
 

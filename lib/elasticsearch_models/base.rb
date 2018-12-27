@@ -2,7 +2,7 @@
 
 module ElasticsearchModels
   class Base < ElasticsearchModels::Aggregate
-    include ElasticsearchModels::DeepCompact
+    include ElasticsearchModels::DeepSquash
 
     class CreateError < StandardError; end
 
@@ -17,7 +17,7 @@ module ElasticsearchModels
       def create!(*params)
         model = new(*params)
         model.validate!
-        response = client_connection.index(index: model.index_name, type: model.type, body: model.deep_compact_to_store)
+        response = client_connection.index(index: model.index_name, type: model.type, body: model.deep_squash_to_store)
 
         if response.dig("_shards", "successful").to_i > 0
           model.assign_metadata_fields(response)
@@ -59,8 +59,8 @@ module ElasticsearchModels
       self.class.type
     end
 
-    def deep_compact_to_store
-      deep_compact(to_store)
+    def deep_squash_to_store
+      deep_squash(to_store)
     end
 
     def assign_metadata_fields(response_hash)

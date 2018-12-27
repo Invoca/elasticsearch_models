@@ -99,8 +99,8 @@ RSpec.describe ElasticsearchModels::Base do
       end
     end
 
-    context "#deep_compact_to_store" do
-      it "deep compacts all fields in to_store by removing empty hashes and empty arrays" do
+    context "#deep_squash_to_store" do
+      it "deep squashes all fields in to_store by removing empty hashes and empty arrays" do
         dummy_model = DummyElasticSearchModel.create!(my_string: "Hello", my_hash: { "a" => [] })
 
         expected_metadata_fields = { "_id" => dummy_model._id, "_type" => "DummyElasticSearchModel", "_index" => "test_example_index" }
@@ -121,12 +121,12 @@ RSpec.describe ElasticsearchModels::Base do
         }.merge(expected_metadata_fields)
         expect(dummy_model.to_store).to eq(expected_to_store)
 
-        expected_deep_compact_to_store = {
+        expected_deep_squash_to_store = {
           "my_string"           => "Hello",
           "my_bool"             => false,
           "data_schema_version" => "1.0"
         }.merge(expected_metadata_fields)
-        expect(dummy_model.deep_compact_to_store).to eq(expected_deep_compact_to_store)
+        expect(dummy_model.deep_squash_to_store).to eq(expected_deep_squash_to_store)
       end
     end
 
