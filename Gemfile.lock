@@ -1,7 +1,7 @@
 GIT
   remote: git@github.com:Invoca/aggregate.git
-  revision: 2d947fd3fb05b9d9d487c060f18e4e1c6ea17dec
-  ref: 2d947fd3fb05b9d9d487c060f18e4e1c6ea17dec
+  revision: b3fd4f570e6d7530a088333892569ce47b570a85
+  ref: b3fd4f570e6d7530a088333892569ce47b570a85
   specs:
     aggregate (0.2.0)
       activerecord (~> 4.0)
