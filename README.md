@@ -86,11 +86,11 @@ DummyElasticSearchModel.where(my_string: ["Hi", "Bye"])
 DummyElasticSearchModel.where(my_string: ["Hi", "Bye"], my_int: [1, 2])
 DummyElasticSearchModel.where(my_int: [1, (5..10)])
 
-# Query by attributes that must match and attributes that should match at least 1 value (can include ranges)
+# Query by attributes that must match and attributes that should match at least 1 value
 DummyElasticSearchModel.where(my_string: "Hi", my_int: [1, 2])
 
 # Query by attributes that must match and attributes that should match at least 1 value (can include ranges)
-DummyElasticSearchModel.where(my_string: "Hi", my_int: [1, 2])
+DummyElasticSearchModel.where(my_string: "Hi", my_int: [1, (5..10)])
 
 # Query by matching nested classes and or hash fields
 DummyElasticSearchModel.where(my_nested_class: { nested_hash_field: { a: 1, b: 2 } })
