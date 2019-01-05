@@ -1,0 +1,4 @@
+export SEMAPHORE_CI_ELASTICSEARCH=true
+
+# Allow elasticsearch binary and config to be readable/executable for tests
+sudo chmod 555 -R /etc/elasticsearch
