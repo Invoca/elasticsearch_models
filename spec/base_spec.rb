@@ -103,7 +103,7 @@ RSpec.describe ElasticsearchModels::Base do
       it "deep squashes all fields in to_store by removing empty hashes and empty arrays" do
         dummy_model = DummyElasticSearchModel.create!(my_string: "Hello", my_hash: { "a" => [] })
 
-        expected_metadata_fields = { "_id" => dummy_model._id, "_type" => "DummyElasticSearchModel", "_index" => "test_example_index" }
+        expected_metadata_fields = { "_id" => dummy_model._id, "_type" => "ElasticsearchModel", "_index" => "test_example_index" }
         expected_to_store = {
           "my_string"                => "Hello",
           "my_other_string"          => nil,
@@ -117,14 +117,16 @@ RSpec.describe ElasticsearchModels::Base do
           "my_nested_class"          => nil,
           "nested_aggregate_classes" => [],
           "dummy_owner_id"           => nil,
-          "data_schema_version"      => "1.0"
+          "data_schema_version"      => "1.0",
+          "_rehydration_class"       => "DummyElasticSearchModel"
         }.merge(expected_metadata_fields)
         expect(dummy_model.to_store).to eq(expected_to_store)
 
         expected_deep_squash_to_store = {
           "my_string"           => "Hello",
           "my_bool"             => false,
-          "data_schema_version" => "1.0"
+          "data_schema_version" => "1.0",
+          "_rehydration_class"  => "DummyElasticSearchModel"
         }.merge(expected_metadata_fields)
         expect(dummy_model.deep_squash_to_store).to eq(expected_deep_squash_to_store)
       end
@@ -139,7 +141,7 @@ RSpec.describe ElasticsearchModels::Base do
         metadata_fields = {
           "_id" => "i5JhrmcBUU6q7YBzawfu",
           :_index => "test_index",
-          "_type" => "ElasticsearchModels::BaseTest::DummyElasticSearchModel"
+          "_type" => "ElasticsearchModel"
         }
         model = DummyElasticSearchModel.new(my_string: "Hello")
         model.assign_metadata_fields(metadata_fields)
@@ -153,13 +155,14 @@ RSpec.describe ElasticsearchModels::Base do
       it "returns rehydrated model with metadata_fields assigned" do
         decoded_aggregate_store = {
           "_index" => "test_index",
-          "_type"  => "ElasticsearchModels::BaseTest::DummyElasticSearchModel",
+          "_type"  => "ElasticsearchModel",
           "_id"    => "i5JhrmcBUU6q7YBzawfu",
           "_score" => 4.2685113,
           "_source" => {
-            "my_string" => "Hello",
-            "my_bool"   => false,
-            "my_int"    => 150
+            "my_string"          => "Hello",
+            "my_bool"            => false,
+            "my_int"             => 150,
+            "_rehydration_class" => "DummyElasticSearchModel"
           }
         }
 
@@ -167,7 +170,7 @@ RSpec.describe ElasticsearchModels::Base do
         expected_aggregate_attributes = {
           "_id"                      => "i5JhrmcBUU6q7YBzawfu",
           "_index"                   => "test_index",
-          "_type"                    => "ElasticsearchModels::BaseTest::DummyElasticSearchModel",
+          "_type"                    => "ElasticsearchModel",
           "my_string"                => "Hello",
           "my_other_string"          => nil,
           "my_bool"                  => false,
@@ -180,7 +183,8 @@ RSpec.describe ElasticsearchModels::Base do
           "my_nested_class"          => nil,
           "nested_aggregate_classes" => [],
           "dummy_owner_id"           => nil,
-          "data_schema_version"      => nil
+          "data_schema_version"      => nil,
+          "_rehydration_class"       => "DummyElasticSearchModel"
         }
         expect(model.aggregate_attributes).to eq(expected_aggregate_attributes)
       end
@@ -188,7 +192,8 @@ RSpec.describe ElasticsearchModels::Base do
 
     context ".create!" do
       before(:each) do
-        @default_fields = { "my_string" => "Hello", "my_bool" => false, "data_schema_version" => "1.0" }
+        @default_fields = { "my_string" => "Hello", "my_bool" => false, "data_schema_version" => "1.0",
+                            "_rehydration_class" => "DummyElasticSearchModel" }
       end
 
       it "submits with index and type" do
@@ -196,7 +201,7 @@ RSpec.describe ElasticsearchModels::Base do
 
         search_hit = refresh_and_find_search_hit
         expect(search_hit["_index"]).to eq(dummy_model.index_name)
-        expect(search_hit["_type"]).to eq(dummy_model.type)
+        expect(search_hit["_source"]["_rehydration_class"]).to eq(dummy_model.type)
       end
 
       it "returns model with filled attributes and elasticsearch metadata fields" do
@@ -343,6 +348,7 @@ RSpec.describe ElasticsearchModels::Base do
             DummyElasticSearchModel.create!(my_string: "Hello", nested_aggregate_classes: [nested_attr] * 2)
 
             expected_additional_fields = {
+              "_rehydration_class"       => "DummyElasticSearchModel",
               "nested_aggregate_classes" => [
                 {
                   "nested_string_field" => "Hi",
@@ -398,6 +404,7 @@ RSpec.describe ElasticsearchModels::Base do
                                         my_nested_class:          nested_attr_with_int,
                                         nested_aggregate_classes: [nested_attr_with_int, nested_attr_with_string])
         expected_search_hit_body = {
+          "_rehydration_class" => "DummyElasticSearchModel",
           "my_string" => "Hello",
           "my_bool"   => true,
           "my_hash"   => {
@@ -457,7 +464,7 @@ RSpec.describe ElasticsearchModels::Base do
 
         document_id = refresh_and_find_search_hit["_id"]
         @elasticsearch_test_client.update(index: DummyElasticSearchModel.index_name,
-                                          type:  DummyElasticSearchModel.type,
+                                          type:  "ElasticsearchModel",
                                           id:    document_id,
                                           body:  { doc: { data_schema_version: "0.5" } })
 

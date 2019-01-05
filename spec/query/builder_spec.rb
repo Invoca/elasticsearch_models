@@ -9,12 +9,12 @@ RSpec.describe ElasticsearchModels::Query::Builder do
   end
 
   def new_builder(**params)
-    ElasticsearchModels::Query::Builder.new("index", "type", params)
+    ElasticsearchModels::Query::Builder.new("index", params)
   end
 
   context "Query::Builder" do
     before(:each) do
-      @default_expected_params = { index: "index", type: "type" }
+      @default_expected_params = { index: "index" }
     end
 
     it "includes index_name and type in search params, while excluding the body if no body params are given" do

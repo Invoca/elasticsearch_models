@@ -6,6 +6,9 @@ module ElasticsearchModels
 
     class CreateError < StandardError; end
 
+    # ElasticSearch is deprecating _type field, however it is still required.
+    DEPRECATED_TYPE = "ElasticsearchModel"
+
     # Metadata fields that can not be set when created
     METADATA_FIELDS = [:_id, :_index, :_type].freeze
 
@@ -13,11 +16,15 @@ module ElasticsearchModels
     attribute :_index, :string
     attribute :_type,  :string
 
+    # aggregate_has_many :inheritance_classes, :string # Add logic to ensure at least 1
+    attribute          :_rehydration_class, :string
+
     class << self
       def create!(*params)
         model = new(*params)
+        model._rehydration_class = type
         model.validate!
-        response = client_connection.index(index: model.index_name, type: model.type, body: model.deep_squash_to_store)
+        response = client_connection.index(index: model.index_name, type: DEPRECATED_TYPE, body: model.deep_squash_to_store)
 
         if response.dig("_shards", "successful").to_i > 0
           model.assign_metadata_fields(response)
@@ -28,7 +35,7 @@ module ElasticsearchModels
       end
 
       def where(**params)
-        search_params = Query::Builder.new(index_name, type, params).search_params
+        search_params = Query::Builder.new(index_name, params).search_params
         Query::Response.new(client_connection.search(search_params))
       end
 
