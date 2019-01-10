@@ -9,7 +9,7 @@ RSpec.describe ElasticsearchModels::Query::Builder do
   end
 
   def new_builder(**params)
-    ElasticsearchModels::Query::Builder.new("index", params)
+    ElasticsearchModels::Query::Builder.new({ _indices: "index" }.merge(params))
   end
 
   context "Query::Builder" do

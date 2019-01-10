@@ -76,6 +76,13 @@ RSpec.describe ElasticsearchModels::Base do
     end
   end
 
+  class DummySubModel < DummyElasticSearchModel
+    attribute :my_dummy_sub_attr, :integer
+  end
+
+  class DummySubBottomLevelModel < DummySubModel; end
+  class DummySubSameLevelModel < DummyElasticSearchModel; end
+
   context "DummyElasticSearchModel" do
     it "inherits from ElasticsearchModels::Base and Aggregate::Base" do
       dummy_model = DummyElasticSearchModel.create!(my_string: "Hello")
@@ -118,7 +125,8 @@ RSpec.describe ElasticsearchModels::Base do
           "nested_aggregate_classes" => [],
           "dummy_owner_id"           => nil,
           "data_schema_version"      => "1.0",
-          "_rehydration_class"       => "DummyElasticSearchModel"
+          "_rehydration_class"       => "DummyElasticSearchModel",
+          "_query_types"             => ["DummyElasticSearchModel"]
         }.merge(expected_metadata_fields)
         expect(dummy_model.to_store).to eq(expected_to_store)
 
@@ -126,7 +134,8 @@ RSpec.describe ElasticsearchModels::Base do
           "my_string"           => "Hello",
           "my_bool"             => false,
           "data_schema_version" => "1.0",
-          "_rehydration_class"  => "DummyElasticSearchModel"
+          "_rehydration_class"  => "DummyElasticSearchModel",
+          "_query_types"             => ["DummyElasticSearchModel"]
         }.merge(expected_metadata_fields)
         expect(dummy_model.deep_squash_to_store).to eq(expected_deep_squash_to_store)
       end
@@ -162,7 +171,8 @@ RSpec.describe ElasticsearchModels::Base do
             "my_string"          => "Hello",
             "my_bool"            => false,
             "my_int"             => 150,
-            "_rehydration_class" => "DummyElasticSearchModel"
+            "_rehydration_class" => "DummyElasticSearchModel",
+            "_query_types"       => ["DummyElasticSearchModel"]
           }
         }
 
@@ -184,7 +194,8 @@ RSpec.describe ElasticsearchModels::Base do
           "nested_aggregate_classes" => [],
           "dummy_owner_id"           => nil,
           "data_schema_version"      => nil,
-          "_rehydration_class"       => "DummyElasticSearchModel"
+          "_rehydration_class"       => "DummyElasticSearchModel",
+          "_query_types"             => ["DummyElasticSearchModel"]
         }
         expect(model.aggregate_attributes).to eq(expected_aggregate_attributes)
       end
@@ -192,8 +203,10 @@ RSpec.describe ElasticsearchModels::Base do
 
     context ".create!" do
       before(:each) do
-        @default_fields = { "my_string" => "Hello", "my_bool" => false, "data_schema_version" => "1.0",
-                            "_rehydration_class" => "DummyElasticSearchModel" }
+        @default_fields = { "my_string" => "Hello", "my_bool" => false,
+                            "data_schema_version" => "1.0",
+                            "_rehydration_class" => "DummyElasticSearchModel",
+                            "_query_types"       => ["DummyElasticSearchModel"] }
       end
 
       it "submits with index and type" do
@@ -405,6 +418,7 @@ RSpec.describe ElasticsearchModels::Base do
                                         nested_aggregate_classes: [nested_attr_with_int, nested_attr_with_string])
         expected_search_hit_body = {
           "_rehydration_class" => "DummyElasticSearchModel",
+          "_query_types"       => ["DummyElasticSearchModel"],
           "my_string" => "Hello",
           "my_bool"   => true,
           "my_hash"   => {
@@ -471,6 +485,38 @@ RSpec.describe ElasticsearchModels::Base do
         refresh_index
         queried_model = DummyElasticSearchModel.where.models.first
         expect(queried_model.my_other_string).to eq("Hello")
+      end
+
+      context "with inheritance" do
+        before(:each) do
+          DummyElasticSearchModel.create!(my_string: "Hello", my_other_string: "Goodbye")
+          DummySubModel.create!(my_string: "Hello2", my_dummy_sub_attr: 42)
+          DummySubBottomLevelModel.create!(my_string: "Hello3", my_dummy_sub_attr: 42)
+          DummySubSameLevelModel.create!(my_string: "Hello4", my_other_string: "Goodbye")
+          refresh_index
+        end
+
+        it "filters on models of the current class and all subclasses" do
+          query_response = DummyElasticSearchModel.where
+          expect(query_response.models.count).to eq(4)
+
+          first_query = DummyElasticSearchModel.where(my_other_string: "Goodbye")
+          expect(first_query.models.count).to eq(2)
+
+          second_query = DummyElasticSearchModel.where(my_dummy_sub_attr: 42)
+          expect(second_query.models.count).to eq(2)
+        end
+
+        it "does not get hits from documents of the super class" do
+          query_response = DummySubModel.where
+          expect(query_response.models.count).to eq(2)
+
+          check_no_super_class_query = DummySubModel.where(my_string: "Hello")
+          expect(check_no_super_class_query.models.count).to eq(0)
+
+          check_no_same_level_query = DummySubModel.where(my_string: "Hello4")
+          expect(check_no_same_level_query.models.count).to eq(0)
+        end
       end
 
       context "pagination and sorting" do

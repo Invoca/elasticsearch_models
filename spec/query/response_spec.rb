@@ -63,7 +63,7 @@ RSpec.describe ElasticsearchModels::Query::Response do
         expect(query_response.errors).to be_empty
         expect(query_response.models.count).to eq(2)
 
-        expected_metadata_fields = { "_id" => "i5JhrmcBUU6q7YBzawfu", "_index" => "test_index",
+        expected_metadata_fields = { "_id" => "i5JhrmcBUU6q7YBzawfu", "_index" => "test_index", "_query_types"=>[],
                                      "_type" => "ElasticsearchModel", "_rehydration_class" => "DummyKlass" }
         expected_model1_to_store = expected_metadata_fields.merge("my_string" => "Hello", "my_bool" => false, "my_int" => 150, "my_enum" => nil)
         expected_model2_to_store = expected_metadata_fields.merge("my_string" => "Hi", "my_bool" => true, "my_int" => 150, "my_enum" => :Goodbye)
