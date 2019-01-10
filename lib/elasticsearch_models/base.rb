@@ -38,7 +38,7 @@ module ElasticsearchModels
 
       def where(**params)
         cleaned_params = params[:_indices] ? params : params.merge(_indices: index_name)
-        search_params = Query::Builder.new(params.merge(_query_types: type)).search_params
+        search_params = Query::Builder.new(cleaned_params.merge(_query_types: type)).search_params
         Query::Response.new(client_connection.search(search_params))
       end
 

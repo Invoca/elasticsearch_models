@@ -26,6 +26,16 @@ module ElasticsearchClusterSpecHelper
       {}
     end.freeze
 
+  def clear_and_create_index(index: ELASTICSEARCH_TEST_INDEX)
+    if @elasticsearch_test_client&.indices&.exists?(index: index)
+      @elasticsearch_test_client.indices.delete(index: index)
+    end
+
+    unless @elasticsearch_test_client&.indices&.exists?(index: index)
+      @elasticsearch_test_client.indices.create(index: index)
+    end
+  end
+
   included do
     before(:all) do
       if ELASTICSEARCH_TEST_PORT == 9250
@@ -42,13 +52,7 @@ module ElasticsearchClusterSpecHelper
     end
 
     before(:each) do
-      if @elasticsearch_test_client&.indices&.exists?(index: ELASTICSEARCH_TEST_INDEX)
-        @elasticsearch_test_client.indices.delete(index: ELASTICSEARCH_TEST_INDEX)
-      end
-
-      unless @elasticsearch_test_client&.indices&.exists?(index: ELASTICSEARCH_TEST_INDEX)
-        @elasticsearch_test_client.indices.create(index: ELASTICSEARCH_TEST_INDEX)
-      end
+      clear_and_create_index
     end
   end
 end

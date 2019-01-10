@@ -3,9 +3,9 @@
 RSpec.describe ElasticsearchModels::Base do
   include ElasticsearchClusterSpecHelper
 
-  def refresh_index
+  def refresh_index(index_name: DummyElasticSearchModel.index_name)
     # To ensure we get back the document we just indexed in
-    @elasticsearch_test_client.indices.refresh(index: DummyElasticSearchModel.index_name)
+    @elasticsearch_test_client.indices.refresh(index: index_name)
   end
 
   def refresh_and_find_search_hit
@@ -83,6 +83,12 @@ RSpec.describe ElasticsearchModels::Base do
   class DummySubBottomLevelModel < DummySubModel; end
   class DummySubSameLevelModel < DummyElasticSearchModel; end
 
+  class DummyUniqueIndexModel < DummyElasticSearchModel
+    def self.index_name
+      "unique_index"
+    end
+  end
+
   context "DummyElasticSearchModel" do
     it "inherits from ElasticsearchModels::Base and Aggregate::Base" do
       dummy_model = DummyElasticSearchModel.create!(my_string: "Hello")
@@ -135,7 +141,7 @@ RSpec.describe ElasticsearchModels::Base do
           "my_bool"             => false,
           "data_schema_version" => "1.0",
           "_rehydration_class"  => "DummyElasticSearchModel",
-          "_query_types"             => ["DummyElasticSearchModel"]
+          "_query_types"        => ["DummyElasticSearchModel"]
         }.merge(expected_metadata_fields)
         expect(dummy_model.deep_squash_to_store).to eq(expected_deep_squash_to_store)
       end
@@ -470,6 +476,24 @@ RSpec.describe ElasticsearchModels::Base do
         query_response = DummyElasticSearchModel.where
         expect(query_response.models.count).to eq(2)
         expect(query_response.models.sort.map(&:to_store)).to eq([dummy_model1, dummy_model2].sort.map(&:to_store))
+      end
+
+      it "filters across multiple indices if provided" do
+        clear_and_create_index(index: DummyUniqueIndexModel.index_name)
+        DummyElasticSearchModel.create!(my_string: "Hello", my_other_string: "Goodbye")
+        DummyUniqueIndexModel.create!(my_string: "Hello")
+        refresh_index
+        refresh_index(index_name: DummyUniqueIndexModel.index_name)
+
+        query_response = DummyElasticSearchModel.where(my_string: "Hello")
+        expect(query_response.models.count).to eql(1)
+        expect(query_response.models.first.my_other_string).to eql("Goodbye")
+
+        multi_index_response = DummyElasticSearchModel.where(
+          my_string: "Hello",
+          _indices: [DummyElasticSearchModel.index_name, DummyUniqueIndexModel.index_name]
+        )
+        expect(multi_index_response.models.count).to eql(2)
       end
 
       it "fixes up the schema for the model if data_schema_version does not match the current value" do
