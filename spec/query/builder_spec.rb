@@ -17,7 +17,7 @@ RSpec.describe ElasticsearchModels::Query::Builder do
       @default_expected_params = { index: "index" }
     end
 
-    it "includes index_name and type in search params, while excluding the body if no body params are given" do
+    it "includes index_name in search params, while excluding the body if no body params are given" do
       expect(new_builder.search_params).to eq(@default_expected_params)
     end
 

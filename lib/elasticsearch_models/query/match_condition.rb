@@ -5,9 +5,7 @@ module ElasticsearchModels
     class MatchCondition
       class << self
         def term_for(key, value)
-          if key.to_sym == :_query_types
-            { match: { key => value } }
-          elsif value.is_a?(Range)
+          if value.is_a?(Range)
             range_condition(key, value)
           elsif value.is_a?(Hash)
             params = { key => value }
