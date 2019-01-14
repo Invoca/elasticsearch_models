@@ -76,12 +76,12 @@ RSpec.describe ElasticsearchModels::Base do
     end
   end
 
-  class DummySubModel < DummyElasticSearchModel
+  class DummySub1AModel < DummyElasticSearchModel
     attribute :my_dummy_sub_attr, :integer
   end
 
-  class DummySubBottomLevelModel < DummySubModel; end
-  class DummySubSameLevelModel < DummyElasticSearchModel; end
+  class DummySub2AModel < DummySub1AModel; end
+  class DummySub1BModel < DummyElasticSearchModel; end
 
   class DummyUniqueIndexModel < DummyElasticSearchModel
     def self.index_name
@@ -211,8 +211,8 @@ RSpec.describe ElasticsearchModels::Base do
       before(:each) do
         @default_fields = { "my_string" => "Hello", "my_bool" => false,
                             "data_schema_version" => "1.0",
-                            "_rehydration_class" => "DummyElasticSearchModel",
-                            "_query_types"       => ["DummyElasticSearchModel"] }
+                            "_rehydration_class"  => "DummyElasticSearchModel",
+                            "_query_types"        => ["DummyElasticSearchModel"] }
       end
 
       it "submits with index and type" do
@@ -481,7 +481,9 @@ RSpec.describe ElasticsearchModels::Base do
       it "filters across multiple indices if provided" do
         clear_and_create_index(index: DummyUniqueIndexModel.index_name)
         DummyElasticSearchModel.create!(my_string: "Hello", my_other_string: "Goodbye")
+        DummyElasticSearchModel.create!(my_string: "Exclude this one")
         DummyUniqueIndexModel.create!(my_string: "Hello")
+        DummyUniqueIndexModel.create!(my_string: "Exclude this one too")
         refresh_index
         refresh_index(index_name: DummyUniqueIndexModel.index_name)
 
@@ -514,9 +516,9 @@ RSpec.describe ElasticsearchModels::Base do
       context "with inheritance" do
         before(:each) do
           DummyElasticSearchModel.create!(my_string: "Hello", my_other_string: "Goodbye")
-          DummySubModel.create!(my_string: "Hello2", my_dummy_sub_attr: 42)
-          DummySubBottomLevelModel.create!(my_string: "Hello3", my_dummy_sub_attr: 42)
-          DummySubSameLevelModel.create!(my_string: "Hello4", my_other_string: "Goodbye")
+          DummySub1AModel.create!(my_string: "Hello2", my_dummy_sub_attr: 42)
+          DummySub2AModel.create!(my_string: "Hello3", my_dummy_sub_attr: 42)
+          DummySub1BModel.create!(my_string: "Hello4", my_other_string: "Goodbye")
           refresh_index
         end
 
@@ -524,21 +526,27 @@ RSpec.describe ElasticsearchModels::Base do
           query_response = DummyElasticSearchModel.where
           expect(query_response.models.count).to eq(4)
 
-          first_query = DummyElasticSearchModel.where(my_other_string: "Goodbye")
-          expect(first_query.models.count).to eq(2)
+          first_query = DummyElasticSearchModel.where(my_other_string: "Goodbye").models
+          expect(first_query.count).to eq(2)
 
-          second_query = DummyElasticSearchModel.where(my_dummy_sub_attr: 42)
-          expect(second_query.models.count).to eq(2)
+          expect(first_query.select { |model| model.type == "DummyElasticSearchModel" }.count).to eq(1)
+          expect(first_query.select { |model| model.type == "DummySub1BModel" }.count).to eq(1)
+
+          second_query = DummyElasticSearchModel.where(my_dummy_sub_attr: 42).models
+          expect(second_query.count).to eq(2)
+          expect(second_query.select { |model| model.type == "DummySub1AModel" }.count).to eq(1)
+          expect(second_query.select { |model| model.type == "DummySub2AModel" }.count).to eq(1)
         end
 
         it "does not get hits from documents of the super class" do
-          query_response = DummySubModel.where
+          query_response = DummySub1AModel.where
           expect(query_response.models.count).to eq(2)
 
-          check_no_super_class_query = DummySubModel.where(my_string: "Hello")
+
+          check_no_super_class_query = DummySub1AModel.where(my_string: "Hello")
           expect(check_no_super_class_query.models.count).to eq(0)
 
-          check_no_same_level_query = DummySubModel.where(my_string: "Hello4")
+          check_no_same_level_query = DummySub1AModel.where(my_string: "Hello4")
           expect(check_no_same_level_query.models.count).to eq(0)
         end
       end
