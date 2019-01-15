@@ -167,7 +167,7 @@ DummyElasticSearchModel.where
 => Returns [a]
 
 DummyElasticSearchModel.where(_indices: ["unique_index"])
-=> Reeturns [b]
+=> Returns [b]
 
 DummyElasticSearchModel.where(_indices: ["other_unique_index"])
 => Returns [c]
