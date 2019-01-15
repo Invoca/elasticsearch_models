@@ -127,28 +127,30 @@ a = DummyElasticSearchModel.create!(my_string: "Hello World", my_other_string: "
 b = DummySubClassModel.create!(my_string: "Hello World", my_other_string: "Baz")
 c = DummySubClassModel.create!(my_string: "Goodbye")
 
-DummyElasticSearchModel.where
+DummyElasticSearchModel.where.models
 => Returns [a, b, c]
 
-DummyElasticSearchModel.where(my_string: "Hello World")
+DummyElasticSearchModel.where(my_string: "Hello World").models
 => Returns [a, b]
 
-DummyElasticSearchModel.where(my_other_string: "Baz")
+DummyElasticSearchModel.where(my_other_string: "Baz").models
 => Returns [b]
 
-DummySubClassModel.where
+DummySubClassModel.where.models
 => Returns [b, c]
 
-DummySubClassModel.where(my_other_string: "Foobar")
+DummySubClassModel.where(my_other_string: "Foobar").models
 => Returns []
 ``` 
 
-#### Querying across multiple indices
+#### Querying on indices
+To query on a specific index, add the `_indices` parameter in your query along with the index you wish to query across.
+
 To query across multiple indices, add the `_indices` parameter in your query with an array of the indices you wish to query across.
 
-The intended usecase for this is to allow for querying across multiple indices that are sharded by time.
-
 Not specifying the indices in a query will use the index name returned from `index_name` by the model you are querying.
+
+The intended usecase for this is to allow for querying across multiple indices that are sharded by time.
 
 Note: Names for indices are arbitrary: passing in an index_name into `_indices` that doesn't exist will return 0 documents.
 ```ruby
@@ -159,31 +161,31 @@ class DummyDailyIndexModel < DummyElasticSearchModel
 end
 
 # Date created: 01/04/19
-a = DummyElasticSearchModel.create!(my_string: "Hello World 1")
+a = DummyElasticSearchModel.create!(my_string: "Hello World 1").models
 # Date created: 01/05/19
-b = DummyDailyIndexModel.create!(my_string: "Hello World 2")
+b = DummyDailyIndexModel.create!(my_string: "Hello World 2").models
 # Date created: 01/06/19
-c = DummyDailyIndexModel.create!(my_string: "Hello World 3")
+c = DummyDailyIndexModel.create!(my_string: "Hello World 3").models
 
 # Current Date: 01/06/19
 DummyDailyIndexModel.index_name
 => "dummy_daily_index.19.01.06" 
 
-DummyDailyIndexModel.where
+DummyDailyIndexModel.where.models
 => Returns [c]
 
-DummyDailyIndexModel.where(_indices: "dummy_daily_index.19.01.04")
+DummyDailyIndexModel.where(_indices: "dummy_daily_index.19.01.04").models
 => Returns [a]
 
-DummyDailyIndexModel.where(_indices: "dummy_daily_index.19.01.05")
+DummyDailyIndexModel.where(_indices: "dummy_daily_index.19.01.05").models
 => Returns [b]
 
-DummyDailyIndexModel.where(_indices: ["dummy_daily_index.19.01.04", "dummy_daily_index.19.01.05"])
+DummyDailyIndexModel.where(_indices: ["dummy_daily_index.19.01.04", "dummy_daily_index.19.01.05"]).models
 => Returns [a, b]
 
-DummyDailyIndexModel.where(_indices: ["dummy_daily_index.19.01.04", "dummy_daily_index.19.01.05", "dummy_daily_index.19.01.06"])
+DummyDailyIndexModel.where(_indices: ["dummy_daily_index.19.01.04", "dummy_daily_index.19.01.05", "dummy_daily_index.19.01.06"]).models
 => Returns [a, b, c]
 
-DummyDailyIndexModel.where(_indices: "wrong_index_name")
+DummyDailyIndexModel.where(_indices: "wrong_index_name").models
 => []
 ```
