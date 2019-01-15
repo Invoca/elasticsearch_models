@@ -145,36 +145,45 @@ DummySubClassModel.where(my_other_string: "Foobar")
 
 #### Querying across multiple indices
 To query across multiple indices, add the `_indices` parameter in your query with an array of the indices you wish to query across.
+
+The intended usecase for this is to allow for querying across multiple indices that are sharded by time.
+
 Not specifying the indices in a query will use the index name returned from `index_name` by the model you are querying.
+
+Note: Names for indices are arbitrary: passing in an index_name into `_indices` that doesn't exist will return 0 documents.
 ```ruby
-class DummyUniqueIndexModel < DummyElasticSearchModel
+class DummyDailyIndexModel < DummyElasticSearchModel
   def index_name
-    "unique_index"
+    time.strftime("dummy_daily_index.%Y.%m.%d")
   end
 end
 
-class DummyOtherUniqueIndexModel < DummyElasticSearchModel
-  def index_name
-    "other_unique_index"
-  end
-end
+# Date created: 01/04/19
+a = DummyElasticSearchModel.create!(my_string: "Hello World 1")
+# Date created: 01/05/19
+b = DummyDailyIndexModel.create!(my_string: "Hello World 2")
+# Date created: 01/06/19
+c = DummyDailyIndexModel.create!(my_string: "Hello World 3")
 
-a = DummyElasticSearchModel.create!(my_string: "Hello World")
-b = DummyUniqueIndexModel.create!(my_string: "Hello World", my_other_string: "Baz")
-c = DummyOtherUniqueIndexModel.create!(my_string: "Hello World", my_other_string: "Foobar")
+# Current Date: 01/06/19
+DummyDailyIndexModel.index_name
+=> "dummy_daily_index.19.01.06" 
 
-DummyElasticSearchModel.where
-=> Returns [a]
-
-DummyElasticSearchModel.where(_indices: ["unique_index"])
-=> Returns [b]
-
-DummyElasticSearchModel.where(_indices: ["other_unique_index"])
+DummyDailyIndexModel.where
 => Returns [c]
 
-DummyElasticSearchModel.where(_indices: ["unique_index", "other_unique_index"])
-=> Returns [b, c]
+DummyDailyIndexModel.where(_indices: "dummy_daily_index.19.01.04")
+=> Returns [a]
 
-DummyElasticSearchModel.where(_indices: [DummyElasticSearchModel.index_name, "unique_index", "other_unique_index"])
+DummyDailyIndexModel.where(_indices: "dummy_daily_index.19.01.05")
+=> Returns [b]
+
+DummyDailyIndexModel.where(_indices: ["dummy_daily_index.19.01.04", "dummy_daily_index.19.01.05"])
+=> Returns [a, b]
+
+DummyDailyIndexModel.where(_indices: ["dummy_daily_index.19.01.04", "dummy_daily_index.19.01.05", "dummy_daily_index.19.01.06"])
 => Returns [a, b, c]
+
+DummyDailyIndexModel.where(_indices: "wrong_index_name")
+=> []
 ```
