@@ -116,3 +116,65 @@ By default, 10 entries are returned from spot 0.
 # Return 25 entries starting from spot 32
 DummyElasticSearchModel.where(_size: 25, _from: 32)
 ```
+
+#### Querying with Inheritance
+When querying on a super class of an ElasticSearch Model, it will retrieve all matching documents of that class and all sub classes of the super class.
+```ruby
+# Using the DummyElasticSearchModel from above
+class DummySubClassModel < DummyElasticSearchModel; end
+
+a = DummyElasticSearchModel.create!(my_string: "Hello World", my_other_string: "Foobar")
+b = DummySubClassModel.create!(my_string: "Hello World", my_other_string: "Baz")
+c = DummySubClassModel.create!(my_string: "Goodbye")
+
+DummyElasticSearchModel.where
+=> Returns [a, b, c]
+
+DummyElasticSearchModel.where(my_string: "Hello World")
+=> Returns [a, b]
+
+DummyElasticSearchModel.where(my_other_string: "Baz")
+=> Returns [b]
+
+DummySubClassModel.where
+=> Returns [b, c]
+
+DummySubClassModel.where(my_other_string: "Foobar")
+=> Returns []
+``` 
+
+#### Querying across multiple indices
+To query across multiple indices, add the `_indices` parameter in your query with an array of the indices you wish to query across.
+Not specifying the indices in a query will use the index name returned from `index_name` by the model you are querying.
+```ruby
+class DummyUniqueIndexModel < DummyElasticSearchModel
+  def index_name
+    "unique_index"
+  end
+end
+
+class DummyOtherUniqueIndexModel < DummyElasticSearchModel
+  def index_name
+    "other_unique_index"
+  end
+end
+
+a = DummyElasticSearchModel.create!(my_string: "Hello World")
+b = DummyUniqueIndexModel.create!(my_string: "Hello World", my_other_string: "Baz")
+c = DummyOtherUniqueIndexModel.create!(my_string: "Hello World", my_other_string: "Foobar")
+
+DummyElasticSearchModel.where
+=> Returns [a]
+
+DummyElasticSearchModel.where(_indices: ["unique_index"])
+=> Reeturns [b]
+
+DummyElasticSearchModel.where(_indices: ["other_unique_index"])
+=> Returns [c]
+
+DummyElasticSearchModel.where(_indices: ["unique_index", "other_unique_index"])
+=> Returns [b, c]
+
+DummyElasticSearchModel.where(_indices: [DummyElasticSearchModel.index_name, "unique_index", "other_unique_index"])
+=> Returns [a, b, c]
+```

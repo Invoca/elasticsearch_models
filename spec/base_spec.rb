@@ -539,15 +539,16 @@ RSpec.describe ElasticsearchModels::Base do
         end
 
         it "does not get hits from documents of the super class" do
-          query_response = DummySub1AModel.where
-          expect(query_response.models.count).to eq(2)
+          query_response = DummySub1AModel.where.models
+          expect(query_response.count).to eq(2)
+          expect(query_response.select { |model| model.type == "DummySub1AModel" }.count).to eq(1)
+          expect(query_response.select { |model| model.type == "DummySub2AModel" }.count).to eq(1)
 
+          check_no_super_class_query = DummySub1AModel.where(my_string: "Hello").models
+          expect(check_no_super_class_query.count).to eq(0)
 
-          check_no_super_class_query = DummySub1AModel.where(my_string: "Hello")
-          expect(check_no_super_class_query.models.count).to eq(0)
-
-          check_no_same_level_query = DummySub1AModel.where(my_string: "Hello4")
-          expect(check_no_same_level_query.models.count).to eq(0)
+          check_no_same_level_query = DummySub1AModel.where(my_string: "Hello4").models
+          expect(check_no_same_level_query.count).to eq(0)
         end
       end
 
