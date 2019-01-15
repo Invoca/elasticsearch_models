@@ -3,9 +3,9 @@
 module ElasticsearchModels
   module Query
     class Builder
-      def initialize(index_name, type, **params)
-        @index_name = index_name
-        @type       = type
+      def initialize(**params)
+        @indices = params.delete(:_indices)
+
         @size       = params.delete(:_size)
         @from       = params.delete(:_from)
         @sort_by    = params.delete(:_sort_by)
@@ -14,7 +14,7 @@ module ElasticsearchModels
       end
 
       def search_params
-        { index: @index_name, type: @type, size: @size, from: @from, body: search_body }.compact
+        { index: @indices, size: @size, from: @from, body: search_body }.compact
       end
 
       private

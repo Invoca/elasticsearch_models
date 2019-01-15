@@ -17,13 +17,14 @@ RSpec.describe ElasticsearchModels::Query::Response do
   def create_search_hit(body_params: {}, search_hit_params: {})
     {
       "_index" => INDEX,
-      "_type"  => "DummyKlass",
+      "_type"  => "ElasticsearchModel",
       "_id"    => "i5JhrmcBUU6q7YBzawfu",
       "_score" => 4.2685113,
       "_source" => {
-        "my_string" => "Hello",
-        "my_bool"   => false,
-        "my_int"    => 150
+        "my_string"          => "Hello",
+        "my_bool"            => false,
+        "my_int"             => 150,
+        "_rehydration_class" => "DummyKlass",
       }.merge(body_params)
     }.merge(search_hit_params)
   end
@@ -62,7 +63,8 @@ RSpec.describe ElasticsearchModels::Query::Response do
         expect(query_response.errors).to be_empty
         expect(query_response.models.count).to eq(2)
 
-        expected_metadata_fields = { "_id" => "i5JhrmcBUU6q7YBzawfu", "_index" => "test_index", "_type" => "DummyKlass" }
+        expected_metadata_fields = { "_id" => "i5JhrmcBUU6q7YBzawfu", "_index" => "test_index", "_query_types" => [],
+                                     "_type" => "ElasticsearchModel", "_rehydration_class" => "DummyKlass" }
         expected_model1_to_store = expected_metadata_fields.merge("my_string" => "Hello", "my_bool" => false, "my_int" => 150, "my_enum" => nil)
         expected_model2_to_store = expected_metadata_fields.merge("my_string" => "Hi", "my_bool" => true, "my_int" => 150, "my_enum" => :Goodbye)
 
@@ -78,19 +80,20 @@ RSpec.describe ElasticsearchModels::Query::Response do
 
         model = query_response.models.first
         expect(model._id).to eq("i5JhrmcBUU6q7YBzawfu")
-        expect(model._type).to eq("DummyKlass")
+        expect(model._type).to eq("ElasticsearchModel")
         expect(model._index).to eq("test_index")
       end
 
       it "returns errors if there's an exception while rehydrating a model and not return that model" do
-        search_hits    = [create_search_hit, create_search_hit(search_hit_params: { "_type" => "invalid type" })]
+        search_hits    = [create_search_hit, create_search_hit(body_params: { "_rehydration_class" => "invalid class" })]
         query_response = ElasticsearchModels::Query::Response.new(form_raw_response(search_hits))
 
         expect(query_response.models.count).to eq(1)
         expect(query_response.errors.count).to eq(1)
-        expected_error_message = "Error rehydrating model from query response hit. Hit: {\"_index\"=>\"test_index\", \"_type\"=>\"invalid type\", "\
-                                 "\"_id\"=>\"i5JhrmcBUU6q7YBzawfu\", \"_score\"=>4.2685113, \"_source\"=>{\"my_string\"=>\"Hello\", "\
-                                 "\"my_bool\"=>false, \"my_int\"=>150}}."
+        expected_error_message = "Error rehydrating model from query response hit. Hit: {\"_index\"=>\"test_index\", "\
+                                 "\"_type\"=>\"ElasticsearchModel\", \"_id\"=>\"i5JhrmcBUU6q7YBzawfu\", "\
+                                 "\"_score\"=>4.2685113, \"_source\"=>{\"my_string\"=>\"Hello\", \"my_bool\"=>false, "\
+                                 "\"my_int\"=>150, \"_rehydration_class\"=>\"invalid class\"}}."
         expect(query_response.errors.first.message).to eq(expected_error_message)
         expect(query_response.errors.first.original_exception.is_a?(NameError)).to be(true)
       end
