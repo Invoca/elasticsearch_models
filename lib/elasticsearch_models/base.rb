@@ -17,14 +17,14 @@ module ElasticsearchModels
     attribute :_type,  :string
 
     # Used for rehydrating and querying: these should not be changed
-    attribute          :_rehydration_class, :string
-    aggregate_has_many :_query_types, :string
+    attribute          :rehydration_class, :string
+    aggregate_has_many :query_types, :string
 
     class << self
       def create!(*params)
         model = new(*params)
-        model._rehydration_class = type
-        model._query_types       = query_types
+        model.rehydration_class = type
+        model.query_types       = query_types
         model.validate!
         response = client_connection.index(index: model.index_name, type: DEPRECATED_TYPE, body: model.deep_squash_to_store)
 
@@ -38,7 +38,7 @@ module ElasticsearchModels
 
       def where(**params)
         params_with_indices = params[:_indices] ? params : params.merge(_indices: index_name)
-        search_params = Query::Builder.new(params_with_indices.merge(_query_types: type)).search_params
+        search_params = Query::Builder.new(params_with_indices.merge(query_types: type)).search_params
         Query::Response.new(client_connection.search(search_params))
       end
 

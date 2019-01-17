@@ -35,7 +35,7 @@ class ElasticsearchModels::Query::Response
   end
 
   def parse_hit(hit)
-    if (klass = hit["_source"]["_rehydration_class"].constantize)
+    if (klass = hit["_source"]["rehydration_class"].constantize)
       { model: klass.from_store(hit) }
     end
   rescue => ex
