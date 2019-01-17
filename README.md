@@ -30,6 +30,8 @@ All classes that you want to store as documents should inherit from `Elasticsear
 ### Full Examples
 For complete example usage, see [the spec for ElasticsearchModels::Base]("https://github.com/Invoca/elasticsearch_models/blob/master/spec/base_spec.rb").
 
+Note: `rehydration_class` and `query_types` are fields used internally in `ElasticsearchModels::Base` so they should not be changed.
+
 ### Creating a model
 ```ruby
 class DummyElasticSearchModel < ElasticsearchModels::Base
@@ -141,7 +143,7 @@ DummySubClassModel.where.models
 
 DummySubClassModel.where(my_other_string: "Foobar").models
 => Returns []
-``` 
+```
 
 #### Querying on indices
 To query on a specific index, add the `_indices` parameter in your query along with the index you wish to query across.
@@ -169,7 +171,7 @@ c = DummyDailyIndexModel.create!(my_string: "Hello World 3").models
 
 # Current Date: 01/06/19
 DummyDailyIndexModel.index_name
-=> "dummy_daily_index.19.01.06" 
+=> "dummy_daily_index.19.01.06"
 
 DummyDailyIndexModel.where.models
 => Returns [c]
