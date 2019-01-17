@@ -131,8 +131,8 @@ RSpec.describe ElasticsearchModels::Base do
           "nested_aggregate_classes" => [],
           "dummy_owner_id"           => nil,
           "data_schema_version"      => "1.0",
-          "_rehydration_class"       => "DummyElasticSearchModel",
-          "_query_types"             => ["DummyElasticSearchModel"]
+          "rehydration_class"        => "DummyElasticSearchModel",
+          "query_types"              => ["DummyElasticSearchModel"]
         }.merge(expected_metadata_fields)
         expect(dummy_model.to_store).to eq(expected_to_store)
 
@@ -140,8 +140,8 @@ RSpec.describe ElasticsearchModels::Base do
           "my_string"           => "Hello",
           "my_bool"             => false,
           "data_schema_version" => "1.0",
-          "_rehydration_class"  => "DummyElasticSearchModel",
-          "_query_types"        => ["DummyElasticSearchModel"]
+          "rehydration_class"   => "DummyElasticSearchModel",
+          "query_types"         => ["DummyElasticSearchModel"]
         }.merge(expected_metadata_fields)
         expect(dummy_model.deep_squash_to_store).to eq(expected_deep_squash_to_store)
       end
@@ -177,8 +177,8 @@ RSpec.describe ElasticsearchModels::Base do
             "my_string"          => "Hello",
             "my_bool"            => false,
             "my_int"             => 150,
-            "_rehydration_class" => "DummyElasticSearchModel",
-            "_query_types"       => ["DummyElasticSearchModel"]
+            "rehydration_class"  => "DummyElasticSearchModel",
+            "query_types"        => ["DummyElasticSearchModel"]
           }
         }
 
@@ -200,8 +200,8 @@ RSpec.describe ElasticsearchModels::Base do
           "nested_aggregate_classes" => [],
           "dummy_owner_id"           => nil,
           "data_schema_version"      => nil,
-          "_rehydration_class"       => "DummyElasticSearchModel",
-          "_query_types"             => ["DummyElasticSearchModel"]
+          "rehydration_class"        => "DummyElasticSearchModel",
+          "query_types"              => ["DummyElasticSearchModel"]
         }
         expect(model.aggregate_attributes).to eq(expected_aggregate_attributes)
       end
@@ -211,8 +211,8 @@ RSpec.describe ElasticsearchModels::Base do
       before(:each) do
         @default_fields = { "my_string" => "Hello", "my_bool" => false,
                             "data_schema_version" => "1.0",
-                            "_rehydration_class"  => "DummyElasticSearchModel",
-                            "_query_types"        => ["DummyElasticSearchModel"] }
+                            "rehydration_class"   => "DummyElasticSearchModel",
+                            "query_types"         => ["DummyElasticSearchModel"] }
       end
 
       it "submits with index and type" do
@@ -220,7 +220,7 @@ RSpec.describe ElasticsearchModels::Base do
 
         search_hit = refresh_and_find_search_hit
         expect(search_hit["_index"]).to eq(dummy_model.index_name)
-        expect(search_hit["_source"]["_rehydration_class"]).to eq(dummy_model.type)
+        expect(search_hit["_source"]["rehydration_class"]).to eq(dummy_model.type)
       end
 
       it "returns model with filled attributes and elasticsearch metadata fields" do
@@ -367,7 +367,7 @@ RSpec.describe ElasticsearchModels::Base do
             DummyElasticSearchModel.create!(my_string: "Hello", nested_aggregate_classes: [nested_attr] * 2)
 
             expected_additional_fields = {
-              "_rehydration_class"       => "DummyElasticSearchModel",
+              "rehydration_class"        => "DummyElasticSearchModel",
               "nested_aggregate_classes" => [
                 {
                   "nested_string_field" => "Hi",
@@ -423,8 +423,8 @@ RSpec.describe ElasticsearchModels::Base do
                                         my_nested_class:          nested_attr_with_int,
                                         nested_aggregate_classes: [nested_attr_with_int, nested_attr_with_string])
         expected_search_hit_body = {
-          "_rehydration_class" => "DummyElasticSearchModel",
-          "_query_types"       => ["DummyElasticSearchModel"],
+          "rehydration_class"  => "DummyElasticSearchModel",
+          "query_types"        => ["DummyElasticSearchModel"],
           "my_string" => "Hello",
           "my_bool"   => true,
           "my_hash"   => {
