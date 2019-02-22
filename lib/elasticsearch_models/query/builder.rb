@@ -6,15 +6,16 @@ module ElasticsearchModels
       def initialize(**params)
         @indices = params.delete(:_indices)
 
-        @size       = params.delete(:_size)
-        @from       = params.delete(:_from)
-        @sort_by    = params.delete(:_sort_by)
+        @size               = params.delete(:_size)
+        @from               = params.delete(:_from)
+        @sort_by            = params.delete(:_sort_by)
+        @ignore_unavailable = params.delete(:_ignore_unavailable)
 
         @params = params.compact
       end
 
       def search_params
-        { index: @indices, size: @size, from: @from, body: search_body }.compact
+        { index: @indices, size: @size, from: @from, ignore_unavailable: @ignore_unavailable, body: search_body }.compact
       end
 
       private

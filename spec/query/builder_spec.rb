@@ -32,6 +32,11 @@ RSpec.describe ElasticsearchModels::Query::Builder do
         expect(new_builder(_from: 99).search_params).to eq(expected_params)
       end
 
+      it "includes _ignore_unavailable when given" do
+        expected_params = @default_expected_params.merge(ignore_unavailable: true)
+        expect(new_builder(_ignore_unavailable: true).search_params).to eq(expected_params)
+      end
+
       context "_sort_by" do
         before(:each) do
           @expected_bool_body = {
