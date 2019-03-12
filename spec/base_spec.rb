@@ -945,5 +945,60 @@ RSpec.describe ElasticsearchModels::Base do
         end
       end
     end
+
+    context ".count" do
+      it "returns count of documents that match simple query params" do
+        DummyElasticSearchModel.create!(my_string: "Hello", my_int: 1)
+        DummyElasticSearchModel.create!(my_string: "Hello2", my_int: 1)
+        DummyElasticSearchModel.create!(my_string: "Hello3", my_int: 1)
+        DummyElasticSearchModel.create!(my_string: "Hello", my_int: 2)
+        refresh_index
+
+        expect(DummyElasticSearchModel.count(my_string: "Hello")).to eq(2)
+      end
+
+      it "returns the count of documents matching dynamic query params" do
+        time = Time.now
+        successful_query_fields = { my_string: "Hello", my_int: 150, my_enum: :Yes, my_float: 1.0, my_time: time }
+
+        DummyElasticSearchModel.create!(my_string: "Hello", my_int: 150, my_enum: :Yes, my_float: 1.0, my_time: time) # Should be returned
+        DummyElasticSearchModel.create!(my_string: "Goodbye", my_int: 1, my_enum: :Yes, my_float: 1.0, my_time: time) # Should be returned
+
+        DummyElasticSearchModel.create!(successful_query_fields.merge(my_string: "Hi"))
+        DummyElasticSearchModel.create!(successful_query_fields.merge(my_int: "2"))
+        DummyElasticSearchModel.create!(successful_query_fields.merge(my_enum: :No))
+        DummyElasticSearchModel.create!(successful_query_fields.merge(my_float: 1.5))
+        DummyElasticSearchModel.create!(successful_query_fields.merge(my_time: time - 1.hour))
+        DummyElasticSearchModel.create!(my_string: "Hi")
+        DummyElasticSearchModel.create!(my_string: "Hi", my_hash: { a: { b: 1, c: 2 } })
+        DummyElasticSearchModel.create!(my_string: "Hi", my_hash: { a: { b: 1, c: 3 } })
+        refresh_index
+
+        count = DummyElasticSearchModel.count(my_string: ["Hello", "Goodbye"],
+                                              my_int:    [1, Range.new(100, 200)],
+                                              my_enum:   :Yes,
+                                              my_float:  1.0,
+                                              my_time:   Range.new(time - 5.minutes, time + 5.minutes))
+        expect(count).to eq(2)
+      end
+
+      it "raises an error when including the _size param" do
+        expect do
+          DummyElasticSearchModel.count(my_string: ["Hello", "Goodbye"], _size: 10)
+        end.to raise_error(ArgumentError, "URL parameter 'size' is not supported")
+      end
+
+      it "raises an error when including the _from param" do
+        expect do
+          DummyElasticSearchModel.count(my_string: ["Hello", "Goodbye"], _from: 10)
+        end.to raise_error(ArgumentError, "URL parameter 'from' is not supported")
+      end
+
+      it "raises an error when including the _sort_by param" do
+        expect do
+          DummyElasticSearchModel.count(my_string: ["Hello", "Goodbye"], _sort_by: { my_time: :asc })
+        end.to raise_error(Elasticsearch::Transport::Transport::Errors::BadRequest, /request does not support \[sort\]/)
+      end
+    end
   end
 end
