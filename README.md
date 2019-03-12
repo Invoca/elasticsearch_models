@@ -191,3 +191,13 @@ DummyDailyIndexModel.where(_indices: ["dummy_daily_index.19.01.04", "dummy_daily
 DummyDailyIndexModel.where(_indices: "wrong_index_name").models
 => []
 ```
+
+### Retrieving Count of Documents
+If you only need to query for the count of documents, you can call `.count` with normal query params. The count will be the return value.
+
+Note: You will need to exclude `_size`, `_from`, and `_sort_by` params.
+
+```ruby
+
+DummyElasticSearchModel.count(my_string: "Hi", my_int: 2) # => 2
+```
