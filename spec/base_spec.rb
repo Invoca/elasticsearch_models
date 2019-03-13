@@ -399,7 +399,7 @@ RSpec.describe ElasticsearchModels::Base do
             dummy_owner.id = 1
             DummyOwnerClass.find_value = dummy_owner
 
-            DummyElasticSearchModel.create!(my_string: "Hello", dummy_owner: dummy_owner)
+            DummyElasticSearchModel.create!(my_string: "Hello", dummy_owner_id: dummy_owner.id)
 
             expect(refresh_and_find_search_hit["_source"]).to eq(@default_fields.merge("dummy_owner_id" => 1))
           end
@@ -511,6 +511,22 @@ RSpec.describe ElasticsearchModels::Base do
         refresh_index
         queried_model = DummyElasticSearchModel.where.models.first
         expect(queried_model.my_other_string).to eq("Hello")
+      end
+
+      context "ignore unavailable indexes" do
+        before(:each) do
+          @missing_index_name = "non_existent_index"
+          expect(@elasticsearch_test_client.indices.exists?(index: @missing_index_name)).to eq(false)
+        end
+
+        it "by default raises an error if attempting to search an index that doesn't exist" do
+          expected_error = Elasticsearch::Transport::Transport::Errors::NotFound
+          expect { DummyElasticSearchModel.where(_indices: [@missing_index_name]) }.to raise_error(expected_error)
+        end
+
+        it "does not raise an error if attempting to search an index that doesn't exist but _ignore_available option is true"  do
+          expect { DummyElasticSearchModel.where(_indices: [@missing_index_name], _ignore_unavailable: true) }.to_not raise_error
+        end
       end
 
       context "with inheritance" do
@@ -998,6 +1014,22 @@ RSpec.describe ElasticsearchModels::Base do
         expect do
           DummyElasticSearchModel.count(my_string: ["Hello", "Goodbye"], _sort_by: { my_time: :asc })
         end.to raise_error(Elasticsearch::Transport::Transport::Errors::BadRequest, /request does not support \[sort\]/)
+      end
+
+      context "ignore unavailable indexes" do
+        before(:each) do
+          @missing_index_name = "non_existent_index"
+          expect(@elasticsearch_test_client.indices.exists?(index: @missing_index_name)).to eq(false)
+        end
+
+        it "by default raises an error if attempting to search an index that doesn't exist" do
+          expected_error = Elasticsearch::Transport::Transport::Errors::NotFound
+          expect { DummyElasticSearchModel.count(_indices: [@missing_index_name]) }.to raise_error(expected_error)
+        end
+
+        it "does not raise an error if attempting to search an index that doesn't exist but _ignore_available option is true"  do
+          expect { DummyElasticSearchModel.count(_indices: [@missing_index_name], _ignore_unavailable: true) }.to_not raise_error
+        end
       end
     end
   end
