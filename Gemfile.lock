@@ -1,9 +1,9 @@
 GIT
   remote: git@github.com:Invoca/aggregate.git
-  revision: 8199a17bd50b5dc34e094f1f2646b6c5e3ad1ddc
-  ref: 8199a17bd50b5dc34e094f1f2646b6c5e3ad1ddc
+  revision: 4644394a818295f240f22ae2cee2a92a9fd4f605
+  ref: 4644394a818295f240f22ae2cee2a92a9fd4f605
   specs:
-    aggregate (1.1.0)
+    aggregate (1.0.1)
       activerecord (~> 4.0)
       encryptor (~> 3.0)
       hobo_support (= 2.0.1)
@@ -195,7 +195,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  aggregate (~> 1.1.0)!
+  aggregate (~> 1.0.1)!
   bundler (~> 1.16)
   elasticsearch-extensions
   elasticsearch_models!
