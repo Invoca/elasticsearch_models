@@ -5,7 +5,7 @@ RSpec.describe ElasticsearchModels::Query::Builder do
     query_body   = bool_body.present? ? { query: { bool: bool_body } } : {}
     sort_by_body = sort_by_inner_body.present? ? { sort: sort_by_inner_body } : {}
 
-    { body: [query_body, sort_by_body].reduce(&:merge) }.merge(@default_expected_params)
+    @default_expected_params.merge(body: [query_body, sort_by_body].reduce(&:merge))
   end
 
   def new_builder(**params)
@@ -17,8 +17,17 @@ RSpec.describe ElasticsearchModels::Query::Builder do
       @default_expected_params = { index: "index" }
     end
 
-    it "includes index_name in search params, while excluding the body if no body params are given" do
-      expect(new_builder.search_params).to eq(@default_expected_params)
+    context "text searching" do
+      it "includes the query_string in search_params when _q is given" do
+        expected_bool_body = {
+          must: [
+            query_string: {
+              query: '(*text AND search*)'
+            }
+          ]
+        }
+        expect(new_builder(_q: "text search").search_params).to eq(expected_query_body(bool_body: expected_bool_body))
+      end
     end
 
     context "pagination and sorting" do
@@ -38,20 +47,20 @@ RSpec.describe ElasticsearchModels::Query::Builder do
       end
 
       context "_sort_by" do
-        before(:each) do
-          @expected_bool_body = {
+        let(:expected_bool_body) do
+          {
             must: [{ match_phrase: { "term1" => true } }]
           }
         end
 
         it "includes sorting when given" do
-          expected_params = expected_query_body(bool_body: @expected_bool_body, sort_by_inner_body: [{ term2: :asc }])
+          expected_params = expected_query_body(bool_body: expected_bool_body, sort_by_inner_body: [{ term2: :asc }])
           expect(new_builder(term1: true, _sort_by: { term2: :asc }).search_params).to eq(expected_params)
         end
 
         it "includes multiple _sort_by values when given" do
           sort_by = [{ term2: :asc }, { term3: :desc }, { "term4.term5" => :asc }]
-          expected_params = expected_query_body(bool_body: @expected_bool_body, sort_by_inner_body: sort_by)
+          expected_params = expected_query_body(bool_body: expected_bool_body, sort_by_inner_body: sort_by)
           expect(new_builder(term1: true, _sort_by: sort_by).search_params).to eq(expected_params)
         end
       end

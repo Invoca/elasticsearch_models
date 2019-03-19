@@ -6,6 +6,7 @@ module ElasticsearchModels
       def initialize(**params)
         @indices = params.delete(:_indices)
 
+        @q                  = params.delete(:_q)
         @size               = params.delete(:_size)
         @from               = params.delete(:_from)
         @sort_by            = params.delete(:_sort_by)
@@ -15,16 +16,20 @@ module ElasticsearchModels
       end
 
       def search_params
-        { index: @indices, size: @size, from: @from, ignore_unavailable: @ignore_unavailable, body: search_body }.compact
+        { index: @indices, size: @size, from: @from, ignore_unavailable: @ignore_unavailable, body: body }.compact
       end
 
       private
 
-      def search_body
-        [query_body, sort_by_body].reduce(&:merge).presence
+      def body
+        [match_query_body, sort_body].reduce(&:merge).presence
       end
 
-      def query_body
+      def search_query
+        @search_query ||= QueryString.term_for(@q)
+      end
+
+      def match_query_body
         if (terms = match_terms).present?
           { query: { bool: { must: terms } } }
         else
@@ -36,10 +41,14 @@ module ElasticsearchModels
         flattened_params = Helper.flatten_hash_with_full_key_paths(@params)
         match_any_params, match_all_params = flattened_params.partition { |_k, v| v.is_a?(Array) }
 
-        (MatchAll.terms_for(match_all_params) + MatchAny.terms_for(match_any_params)).compact
+        [
+          (MatchCondition.query_string(search_query) if search_query),
+          *MatchAll.terms_for(match_all_params),
+          *MatchAny.terms_for(match_any_params)
+        ].compact
       end
 
-      def sort_by_body
+      def sort_body
         { sort: Array.wrap(@sort_by).presence }.compact
       end
     end
