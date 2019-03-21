@@ -52,3 +52,6 @@ build-iPhoneSimulator/
 
 # RubyMine
 .idea
+
+# RuboCop
+.rubocop-https*
