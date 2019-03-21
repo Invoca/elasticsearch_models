@@ -16,6 +16,10 @@ RSpec.describe ElasticsearchModels::Base do
     search_response.dig("hits", "hits").first
   end
 
+  def expect_response_models_match(response_models, expected_models)
+    expect(response_models.sort_by(&:_id).map(&:to_store)).to eq(expected_models.sort_by(&:_id).map(&:to_store))
+  end
+
   class DummyOwnerClass
     attr_accessor :id
 
@@ -643,6 +647,126 @@ RSpec.describe ElasticsearchModels::Base do
             query_response = DummyElasticSearchModel.where(_from: 32, _sort_by: { my_time: :asc })
             expect(query_response.models.count).to eq(10)
             expect(query_response.models.map(&:to_store)).to eq(@dummy_models[32..41].map(&:to_store))
+          end
+        end
+      end
+
+      context "with a search query" do
+        subject(:response) { DummyElasticSearchModel.where(match_conditions.merge(_q: query_conditions)) }
+        let(:match_conditions) { {} }
+
+        context "string searching" do
+          before(:each) do
+            @dummy_model1 = DummyElasticSearchModel.create!(my_string: "Hello")
+            @dummy_model2 = DummyElasticSearchModel.create!(my_string: "Hello2")
+            @dummy_model3 = DummyElasticSearchModel.create!(my_string: "Hey1", my_other_string: "Hello3")
+            @dummy_model4 = DummyElasticSearchModel.create!(my_string: "Hey2", my_other_string: "Hello4")
+            refresh_index
+          end
+
+          context "alone" do
+            let(:query_conditions) { "Hello" }
+
+            it "returns all matching entries" do
+              expect(response.models.count).to eq(4)
+              expect_response_models_match(response.models, [@dummy_model1, @dummy_model2, @dummy_model3, @dummy_model4])
+            end
+          end
+
+          context "scoped to a field" do
+            let(:query_conditions) { { my_other_string: "Hello" } }
+
+            it "returns all matching entries" do
+              expect(response.models.count).to eq(2)
+              expect_response_models_match(response.models, [@dummy_model3, @dummy_model4])
+            end
+          end
+
+          context "with must match attributes" do
+            let(:query_conditions) { { my_string: "Hey" } }
+            let(:match_conditions) { { my_other_string: "Hello3" } }
+
+            it "returns all matching entries" do
+              expect(response.models.count).to eq(1)
+              expect_response_models_match(response.models, [@dummy_model3])
+            end
+          end
+        end
+
+        context "numeric searching" do
+          before(:each) do
+            @dummy_model1 = DummyElasticSearchModel.create!(my_string: "required", my_int: 10, my_float: 15.5)
+            @dummy_model2 = DummyElasticSearchModel.create!(my_string: "required", my_int: 3, my_other_string: "1.21")
+            @dummy_model3 = DummyElasticSearchModel.create!(my_string: "required", my_float: 1.21, my_int: 3)
+            @dummy_model4 = DummyElasticSearchModel.create!(my_string: "1.21", my_other_string: "10")
+            @dummy_model5 = DummyElasticSearchModel.create!(my_string: "required", my_decimal: 1.21, my_int: 3)
+            refresh_index
+          end
+
+          context "alone" do
+            let(:query_conditions) { 10 }
+
+            it "returns all matching entries" do
+              expect(response.models.count).to eq(2)
+              expect_response_models_match(response.models, [@dummy_model1, @dummy_model4])
+            end
+          end
+
+          context "scoped to a field" do
+            let(:query_conditions) { { my_decimal: 1.21 } }
+
+            it "returns all matching entries" do
+              expect(response.models.count).to eq(1)
+              expect_response_models_match(response.models, [@dummy_model5])
+            end
+          end
+
+          context "with must match attributes" do
+            let(:query_conditions) { 3 }
+            let(:match_conditions) { { my_other_string: "1.21" } }
+
+            it "returns all matching entries" do
+              expect(response.models.count).to eq(1)
+              expect_response_models_match(response.models, [@dummy_model2])
+            end
+          end
+        end
+
+        context "range searching" do
+          before(:each) do
+            @dummy_model1 = DummyElasticSearchModel.create!(my_string: "required", my_int: 10, my_float: 15.5)
+            @dummy_model2 = DummyElasticSearchModel.create!(my_string: "required", my_int: 3)
+            @dummy_model3 = DummyElasticSearchModel.create!(my_string: "required", my_time: Time.new(2010, 1, 2))
+            refresh_index
+          end
+
+          context "alone" do
+            let(:query_conditions) { 3..10 }
+
+            it "returns all matching entries" do
+              skip("Semaphore's version of Elasticsearch does not support Full Text Query of Ranges") if ENV["SEMAPHORE_CI_ELASTICSEARCH"].present?
+              expect(response.models.count).to eq(2)
+              expect_response_models_match(response.models, [@dummy_model1, @dummy_model2])
+            end
+          end
+
+          context "scoped to a field" do
+            let(:query_conditions) { { my_time: Date.new(2010, 1, 1)..Date.new(2010, 1, 3) } }
+
+            it "returns all matching entries" do
+              expect(response.models.count).to eq(1)
+              expect_response_models_match(response.models, [@dummy_model3])
+            end
+          end
+
+          context "with must match attributes" do
+            let(:query_conditions) { 1..10 }
+            let(:match_conditions) { { my_float: 15.5 } }
+
+            it "returns all matching entries" do
+              expect(response.models.count).to eq(1)
+              expect_response_models_match(response.models, [@dummy_model1])
+            end
           end
         end
       end
