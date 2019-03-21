@@ -53,5 +53,19 @@ RSpec.describe ElasticsearchModels::Query::MatchCondition do
         expect(ElasticsearchModels::Query::MatchCondition.term_for(:a, value)).to eq(expected_term)
       end
     end
+
+    describe ".query_string" do
+      subject(:condition) { ElasticsearchModels::Query::MatchCondition.query_string(query_string) }
+      let(:query_string) { "some_search_term" }
+
+      it "returns nested hash to hold the query_string" do
+        expected_term = {
+          query_string: {
+            query: query_string
+          }
+        }
+        expect(condition).to eq(expected_term)
+      end
+    end
   end
 end
