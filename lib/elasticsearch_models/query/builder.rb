@@ -7,6 +7,7 @@ module ElasticsearchModels
         @indices = params.delete(:_indices)
 
         @q                  = params.delete(:_q)
+        @aggs               = params.delete(:_aggs).presence
         @size               = params.delete(:_size)
         @from               = params.delete(:_from)
         @sort_by            = params.delete(:_sort_by)
@@ -22,7 +23,15 @@ module ElasticsearchModels
       private
 
       def body
-        [match_query_body, sort_body].reduce(&:merge).presence
+        [match_query_body, sort_body, aggs_body].reduce(&:merge).presence
+      end
+
+      def aggs_body
+        if @aggs
+          Aggregations.terms_for(@aggs)
+        else
+          {}
+        end
       end
 
       def search_query
