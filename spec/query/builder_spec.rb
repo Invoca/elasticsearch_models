@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
 RSpec.describe ElasticsearchModels::Query::Builder do
-  def expected_query_body(bool_body: nil, sort_by_inner_body: nil)
+  def expected_query_body(bool_body: nil, sort_by_inner_body: nil, aggs_inner_body: nil)
     query_body   = bool_body.present? ? { query: { bool: bool_body } } : {}
     sort_by_body = sort_by_inner_body.present? ? { sort: sort_by_inner_body } : {}
-
-    @default_expected_params.merge(body: [query_body, sort_by_body].reduce(&:merge))
+    aggs_body = aggs_inner_body.present? ? { aggs: aggs_inner_body } : {}
+    @default_expected_params.merge(body: [query_body, sort_by_body, aggs_body].reduce(&:merge))
   end
 
   def new_builder(**params)
@@ -362,6 +362,41 @@ RSpec.describe ElasticsearchModels::Query::Builder do
         expected_params = expected_query_body(bool_body: bool_body)
         params = { term1: true, term2: { a: { b: 1, c: 2 } }, term3: [1, { a: { b: 2, c: { d: (1..2) } } }], term4: [:a, :b] }
         expect(new_builder(params).search_params).to eq(expected_params)
+      end
+    end
+
+    context "with _aggs provided" do
+      subject(:search_params) { new_builder(search_options).search_params }
+      let(:search_options) { { _aggs: _aggs } }
+      let(:_aggs) { "some.field.keyword" }
+      let(:expected_inner_aggs) do
+        {
+          "some.field.keyword" => {
+            terms: {
+              field: "some.field.keyword",
+              order: { "_count" => "desc" }
+            }
+          }
+        }
+      end
+
+      it "includes aggs in body" do
+        expect(search_params).to eq(expected_query_body(aggs_inner_body: expected_inner_aggs))
+      end
+
+      context "and a search query" do
+        let(:search_options) { { _aggs: _aggs, _q: "text search" } }
+
+        it "includes the query_string in bool body with aggregations built" do
+          expected_bool_body = {
+            must: [
+              query_string: {
+                query: '(*text AND search*)'
+              }
+            ]
+          }
+          expect(search_params).to eq(expected_query_body(aggs_inner_body: expected_inner_aggs, bool_body: expected_bool_body))
+        end
       end
     end
   end
