@@ -14,6 +14,7 @@ require 'elasticsearch_models/deep_squash'
 require 'elasticsearch_models/aggregate'
 require 'elasticsearch_models/base'
 
+require 'elasticsearch_models/query/aggregations'
 require 'elasticsearch_models/query/aggregation_term'
 require 'elasticsearch_models/query/builder'
 require 'elasticsearch_models/query/response'
