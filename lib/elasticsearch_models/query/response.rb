@@ -10,10 +10,11 @@ class ElasticsearchModels::Query::Response
     end
   end
 
-  attr_reader :models, :raw_response, :errors
+  attr_reader :models, :raw_response, :errors, :aggregations
 
   def initialize(raw_response)
     @raw_response    = raw_response
+    @aggregations    = raw_response["aggregations"]
     @models, @errors = parse_raw_response
   end
 

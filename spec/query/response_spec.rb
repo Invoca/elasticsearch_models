@@ -29,7 +29,18 @@ RSpec.describe ElasticsearchModels::Query::Response do
     }.merge(search_hit_params)
   end
 
-  def form_raw_response(hits)
+  def aggregation_hit(label, keys: [])
+    @bucket_doc_count ||= 20.times.to_a
+    {
+      label => {
+        "doc_count_error_upper_bound" => 0,
+        "sum_other_doc_count"         => 0,
+        "buckets"                     => keys.map { |key| { "key" => key, "doc_count" => @bucket_doc_count.sample } }
+      }
+    }
+  end
+
+  def form_raw_response(hits, aggregations: nil)
     {
       "took"      => 3,
       "timed_out" => false,
@@ -43,13 +54,14 @@ RSpec.describe ElasticsearchModels::Query::Response do
         "total"     => hits.count,
         "max_score" => 4.2685113,
         "hits"      => hits
-      }
-    }
+      },
+      "aggregations" => aggregations&.reduce(&:merge)
+    }.compact
   end
 
   context "Query::Response" do
     context "#raw_response" do
-      it "stores the full query response " do
+      it "stores the full query response" do
         response = form_raw_response([create_search_hit])
         expect(ElasticsearchModels::Query::Response.new(response).raw_response).to eq(response)
       end
@@ -72,7 +84,7 @@ RSpec.describe ElasticsearchModels::Query::Response do
         expect(query_response.models.map(&:aggregate_attributes)).to eq([expected_model1_to_store, expected_model2_to_store])
       end
 
-      it "includse metadata fields in the returned rehydrated model" do
+      it "includes metadata fields in the returned rehydrated model" do
         query_response = ElasticsearchModels::Query::Response.new(form_raw_response([create_search_hit]))
 
         expect(query_response.errors).to be_empty
@@ -96,6 +108,13 @@ RSpec.describe ElasticsearchModels::Query::Response do
                                  "\"my_int\"=>150, \"rehydration_class\"=>\"invalid class\"}}."
         expect(query_response.errors.first.message).to eq(expected_error_message)
         expect(query_response.errors.first.original_exception.is_a?(NameError)).to be(true)
+      end
+    end
+
+    context "#aggregations" do
+      it "returns the raw aggregations response" do
+        response = form_raw_response([create_search_hit], aggregations: [aggregation_hit("some.field", keys: ["value"])])
+        expect(ElasticsearchModels::Query::Response.new(response).aggregations).to eq(response["aggregations"])
       end
     end
   end
