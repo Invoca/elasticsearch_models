@@ -1147,5 +1147,210 @@ RSpec.describe ElasticsearchModels::Base do
         end
       end
     end
+
+    describe ".distinct_values" do
+      subject(:distinct_values) { DummyElasticSearchModel.distinct_values(field, options) }
+      let(:field) { "my_string.keyword" }
+      let(:options) do
+        {
+          additional_fields: additional_fields,
+          order:             order,
+          size:              size,
+          partition:         partition,
+          num_partitions:    num_partitions,
+          where:             where
+        }.compact
+      end
+      let(:additional_fields) { }
+      let(:order) { }
+      let(:size) { }
+      let(:partition) { }
+      let(:num_partitions) { }
+      let(:where) { }
+
+      before :each do
+        DummyElasticSearchModel.create!(my_string: "Hey", my_int: 0, my_bool: true)
+        DummyElasticSearchModel.create!(my_string: "Hello", my_int: 1)
+        DummyElasticSearchModel.create!(my_string: "This is a test", my_int: 2)
+        DummyElasticSearchModel.create!(my_string: "This is a test", my_int: 2)
+        DummyElasticSearchModel.create!(my_string: "Hello", my_int: 3, my_bool: true)
+        DummyElasticSearchModel.create!(my_string: "Hello again", my_int: 4, my_bool: true)
+        DummyElasticSearchModel.create!(my_string: "How are you?", my_other_string: "found by fuzzy matching", my_int: 5)
+
+        refresh_index
+      end
+
+      context "when field is not aggregateable" do
+        let(:field) { "my_string" }
+
+        it "raises Elasticsearch BadRequest" do
+          error = raise_error(Elasticsearch::Transport::Transport::Errors::BadRequest, /Fielddata is disabled on text fields by default/)
+          expect { distinct_values }.to error
+        end
+      end
+
+      context "field provided is a string" do
+        it "returns all distinct values for the provided field in hash form" do
+          expect(distinct_values).to eq("my_string.keyword" => ["Hello", "This is a test", "Hello again", "Hey", "How are you?"])
+        end
+      end
+
+      context "field provided is empty" do
+        let(:field) { "" }
+
+        it "returns ArgumentError if not provided with a string" do
+          expect { distinct_values }.to raise_error(ArgumentError, "field must be a present String")
+        end
+      end
+
+      context "field provided is not a string" do
+        let(:field) { {} }
+
+        it "returns ArgumentError if not provided with a string" do
+          expect { distinct_values }.to raise_error(ArgumentError, "field must be a present String")
+        end
+      end
+
+      context "with :additional_fields option" do
+        let(:additional_fields) { ["my_int", "my_other_string.keyword"] }
+
+        it "returns all distinct values with nested values in hash form" do
+          # { field => { "response1" => [...], "response2" => [...] } }
+          expected_values = {
+            "my_string.keyword" => {
+              "This is a test" => {
+                "my_int" => [2],
+                "my_other_string.keyword" => []
+              },
+              "How are you?" => {
+                "my_int" => [5],
+                "my_other_string.keyword" => ["found by fuzzy matching"]
+              },
+              "Hey" => {
+                "my_int" => [0],
+                "my_other_string.keyword" => []
+              },
+              "Hello" => {
+                "my_int" => [1, 3],
+                "my_other_string.keyword" => []
+              },
+              "Hello again" => {
+                "my_int" => [4],
+                "my_other_string.keyword" => []
+              }
+            }
+          }
+          expect(distinct_values).to eq(expected_values)
+        end
+
+        context "but not all fields are present" do
+          let(:additional_fields) { ["my_int", ""] }
+
+          it "raises ArgumentError if any of the values provided are not strings" do
+            expect { distinct_values }.to raise_error(ArgumentError, "additional_fields must all be present Strings")
+          end
+        end
+
+        context "but not all fields are strings" do
+          let(:additional_fields) { ["my_int", 123] }
+
+          it "raises ArgumentError if any of the values provided are not strings" do
+            expect { distinct_values }.to raise_error(ArgumentError, "additional_fields must all be present Strings")
+          end
+        end
+      end
+
+      context "with :size option" do
+        let(:size) { 2 }
+
+        it "returns only that number of distinct fields" do
+          expect(distinct_values).to eq("my_string.keyword" => ["Hello", "This is a test"])
+        end
+      end
+
+      context "with :order option" do
+        context "as a String" do
+          let(:order) { "_term" }
+
+          it "orders response by provided option" do
+            expect(distinct_values).to eq("my_string.keyword" => ["This is a test", "How are you?", "Hey", "Hello again", "Hello"])
+          end
+        end
+
+        context "as an Array with a single element defining sort field" do
+          let(:order) { ["_term"] }
+
+          it "orders response by provided option" do
+            expect(distinct_values).to eq("my_string.keyword" => ["This is a test", "How are you?", "Hey", "Hello again", "Hello"])
+          end
+        end
+
+        context "as an Array with elements defining sort field and sort order" do
+          let(:order) { ["_term", "asc"] }
+
+          it "orders response by provided option" do
+            expect(distinct_values).to eq("my_string.keyword" => ["Hello", "Hello again", "Hey", "How are you?", "This is a test"])
+          end
+        end
+
+        context "as an invalid option" do
+          let(:order) { "not orderable" }
+
+          it "raises Elasticsearch error" do
+            error = raise_error(Elasticsearch::Transport::Transport::Errors::InternalServerError, /Unknown aggregation \[not orderable\]/)
+            expect { distinct_values }.to error
+          end
+        end
+      end
+
+      context "with :partition provided alone" do
+        let(:partition) { 0 }
+
+        it "raises Elasticsearch error" do
+          error = raise_error(
+            Elasticsearch::Transport::Transport::Errors::BadRequest,
+            /Missing \[num_partitions\] parameter for partition-based include/
+          )
+          expect { distinct_values }.to error
+        end
+      end
+
+      context "with :num_partitions provided alone" do
+        let(:num_partitions) { 10 }
+
+        it "raises Elasticsearch error" do
+          error = raise_error(Elasticsearch::Transport::Transport::Errors::BadRequest, /Missing \[partition\] parameter for partition-based include/)
+          expect { distinct_values }.to error
+        end
+      end
+
+      context "with :partition and :num_partitions provided" do
+        let(:partition) { 0 }
+        let(:num_partitions) { 2 }
+
+        it "allows for partitioned responses" do
+          expect(distinct_values).to eq("my_string.keyword" => ["Hello", "This is a test", "Hello again", "How are you?"])
+          expect(DummyElasticSearchModel.distinct_values(field, options.merge(partition: 1))).to eq("my_string.keyword" => ["Hey"])
+        end
+      end
+
+      context "with :where param" do
+        context "provided with a search query (_q param)" do
+          let(:where) { { _q: "fuzzy" } }
+
+          it "filters down responses" do
+            expect(distinct_values).to eq("my_string.keyword" => ["How are you?"])
+          end
+        end
+
+        context "provided with AND/OR matches" do
+          let(:where) { { my_int: 1..4, my_bool: true } }
+
+          it "filters down matches" do
+            expect(distinct_values).to eq("my_string.keyword" => ["Hello", "Hello again"])
+          end
+        end
+      end
+    end
   end
 end

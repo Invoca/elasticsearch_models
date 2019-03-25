@@ -44,6 +44,14 @@ module ElasticsearchModels
         client_connection.count(query_params(**params))["count"]
       end
 
+      def distinct_values(field, additional_fields: [], where: {}, **params)
+        field.presence.is_a?(String) or raise ArgumentError, "field must be a present String"
+        additional_fields.all? { |f| f.presence.is_a?(String) } or raise ArgumentError, "additional_fields must all be present Strings"
+
+        response = where(_aggs: { field: field, aggs: additional_fields.presence, **params }.compact, **where.merge(_size: 0))
+        distinct_values_response(response.aggregations, additional_fields: additional_fields)
+      end
+
       def client_connection
         raise NotImplementedError # Should return Elasticsearch::Client
       end
@@ -72,6 +80,19 @@ module ElasticsearchModels
       def query_params(**params)
         params_with_indices = params[:_indices] ? params : params.merge(_indices: index_name)
         Query::Builder.new(params_with_indices.merge(query_types: type)).search_params
+      end
+
+      def distinct_values_response(aggregations, additional_fields: [])
+        aggregations.each_with_object({}) do |(field, values), result|
+          result[field] =
+            if additional_fields.present?
+              values["buckets"].build_hash do |item|
+                [item["key"], distinct_values_response(item & additional_fields)]
+              end
+            else
+              values["buckets"].map { |item| item["key"] }
+            end
+        end
       end
     end
 
