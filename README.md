@@ -68,6 +68,7 @@ Queries return a `ElasticsearchModels::QueryResponse` which will contain `raw_re
 * `raw_response`: Full response from elasticsearch query.
 * `models`: Rehydrated models from the query response (based on `_type`).
 * `errors`: Errors that occurred when attempting to rehydrate models.
+* `aggregations`: Raw response for any aggregations included in the search.
 
 #### Query by Elasticsearch document id or attributes
 
@@ -217,6 +218,43 @@ DummyDailyIndexModel.where(_indices: "wrong_index_name").models
 => []
 ```
 
+#### Querying with Aggregations
+To query and receive term aggregations back, simply add the `_aggs` parameter to your query along with the term and/or term with options that you like to get an aggregation for.
+
+The default ordering for an aggregation is by the `_count` in `desc` order
+
+Supported Aggregation query params:
+
+**Required Arguments**:
+* `field`: the field to do an aggregation on
+
+**Optional Arguments**:
+* `size`: the limit on how many terms to return as part of the terms aggregation
+* `order`: The ordering for the response
+* `partitions`: The current partition to query in (requires `num_partitions` if set)
+* `num_partitions`: The amount of partitions to bucket results into (requires `partition` if set)
+
+```ruby
+# Aggregate on a single term
+# Note: keyword terms are required for text fields that do not have fielddata enabled on the index 
+DummyElasticSearchModel.where(_aggs: "my_string.keyword")
+
+# Aggregate on a multiple terms
+DummyElasticSearchModel.where(_aggs: ["my_string.keyword", "my_int.id"])
+
+# Aggregate on a single field with a limit on the result size
+DummyElasticSearchModel.where(_aggs: { field: "my_string.keyword", size: 2 })
+
+# Aggregate on a single field with ordering on a different field (default desc order)
+DummyElasticSearchModel.where(_aggs: { field: "my_string.keyword", order: "_key" })
+
+# Aggregate on a single field with ordering on a different field in a different direction
+DummyElasticSearchModel.where(_aggs: { field: "my_string.keyword", order: ["_key", "asc"] })
+
+# Aggregate on a single field with sub-aggregations (supports infinite nestings)
+DummyElasticSearchModel.where(_aggs: { field: "my_string.keyword", aggs: "my_id" })
+```
+
 ### Retrieving Count of Documents
 If you only need to query for the count of documents, you can call `.count` with normal query params. The count will be the return value.
 
@@ -225,4 +263,36 @@ Note: You will need to exclude `_size`, `_from`, and `_sort_by` params.
 ```ruby
 
 DummyElasticSearchModel.count(my_string: "Hi", my_int: 2) # => 2
+```
+
+### Retrieving Distinct Values for a Field
+If you would like to find all of the distinct values for a specific field, you can call `.distinct_values` with normal Aggregation query params.
+
+This method of aggregation supports one layer of sub aggregations only.
+```ruby
+# Distinct Values for single term
+DummyElasticSearchModel.distinct_values("my_string.keyword")
+
+# Distinct Values for single term with a response size limit
+DummyElasticSearchModel.distinct_values("my_string.keyword", size: 10)
+
+# Distinct Values for single term with Query filtering
+DummyElasticSearchModel.distinct_values("my_string.keyword", where: { my_string: "Alec" } })
+
+# Distinct Values for single term Search Query filtering
+DummyElasticSearchModel.distinct_values("my_string.keyword", where: { _q: { "Hey" } })
+
+# Distinct Values for single term with order
+DummyElasticSearchModel.distinct_values("my_string.keyword", order: "_key")
+DummyElasticSearchModel.distinct_values("my_string.keyword", order: "_count")
+DummyElasticSearchModel.distinct_values("my_string.keyword", order: ["_count", "asc"])
+DummyElasticSearchModel.distinct_values("my_string.keyword", order: ["_key", "asc"])
+
+# Distinct Values with partition
+DummyElasticSearchModel.distinct_values("my_string.keyword", partition: 0, num_partitions: 2)
+DummyElasticSearchModel.distinct_values("my_string.keyword", partition: 1, num_partitions: 2)
+
+# Distinct Values with Additional Fields
+DummyElasticSearchModel.distinct_values("my_int", additional_fields: ["my_string"])
+DummyElasticSearchModel.distinct_values("my_int", additional_fields: ["my_int", "my_string"])
 ```
