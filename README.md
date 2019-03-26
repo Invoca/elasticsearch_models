@@ -119,6 +119,31 @@ By default, 10 entries are returned from spot 0.
 DummyElasticSearchModel.where(_size: 25, _from: 32)
 ```
 
+#### Query String searching
+By providing the `_q` parameter, you can do Full Text Query String searching.
+
+String searching using the `_q` parameter is fuzzy by default (`*` on both ends of string so you can match in the middle of terms/strings). 
+
+As well, search terms that include spaces will `AND` each term instead of the implicit `OR`
+
+e.g. `full text` search string will be converted to the following query string `(*full AND text*)`
+```ruby
+# Query by full text string searching
+DummyElasticSearchModel.where(_q: "Hello")
+
+# Query by fuzzy text searching on a specific field
+DummyElasticSearchModel.where(_q: { my_string: "Hello" })
+
+# Query by attributes in a range as well
+DummyElasticSearchModel.where(_q: { my_string: "Hi", my_int: 5..10) })
+
+# Query by attributes where at least 1 value matches
+DummyElasticSearchModel.where(_q: { my_string: "Hi", my_int: [1, (5..10)] })
+
+# Query by nested classes or hash fields
+DummyElasticSearchModel.where(_q: { my_nested_class: { nested_hash_field: { a: 1, b: 2 } } })
+```
+
 #### Querying with Inheritance
 When querying on a super class of an ElasticSearch Model, it will retrieve all matching documents of that class and all sub classes of the super class.
 ```ruby
