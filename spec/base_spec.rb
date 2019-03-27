@@ -1285,11 +1285,19 @@ RSpec.describe ElasticsearchModels::Base do
           end
         end
 
-        context "as an Array with elements defining sort field and sort order" do
-          let(:order) { ["_term", "asc"] }
+        context "as a Hash" do
+          let(:order) { { "_term" => "asc" } }
 
           it "orders response by provided option" do
             expect(distinct_values).to eq("my_string.keyword" => ["Hello", "Hello again", "Hey", "How are you?", "This is a test"])
+          end
+        end
+
+        context "as an array with multiple order terms" do
+          let(:order) { [{ "_count" => "desc" }, { "_term" => "desc" }] }
+
+          it "orders response by provided option" do
+            expect(distinct_values).to eq("my_string.keyword" => ["This is a test", "Hello", "How are you?", "Hey", "Hello again"])
           end
         end
 

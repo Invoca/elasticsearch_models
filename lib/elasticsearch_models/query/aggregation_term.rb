@@ -12,7 +12,7 @@ module ElasticsearchModels
         @field = field.presence or raise ArgumentError, "field must be provided"
 
         @size    = size
-        @order   = order_term(order)
+        @order   = Array.wrap(order).flatten.map { |term| order_term(term) }.compact.presence
         @include = { partition: partition, num_partitions: num_partitions }.compact.presence
         @term    = _term
       end
@@ -33,19 +33,14 @@ module ElasticsearchModels
       end
 
       def order_term(order)
-        order_by, order_direction =
-          case order.presence
-          when String
-            [order, DEFAULT_ORDER_DIRECTION]
-          when Array
-            order.size > 2 and raise ArgumentError, "order provided as an Array with more than 2 elements. Expected 1..2"
-            [order[0], order[1] || DEFAULT_ORDER_DIRECTION]
-          when nil
-            [DEFAULT_ORDER_BY, DEFAULT_ORDER_DIRECTION]
-          else
-            raise ArgumentError, "unexpected value for order: got #{order.inspect}"
-          end
-        { order_by => order_direction }
+        case order.presence
+        when String
+          { order => DEFAULT_ORDER_DIRECTION }
+        when Hash, nil
+          order
+        else
+          raise ArgumentError, "unexpected value for order: got #{order.inspect}"
+        end
       end
     end
   end
