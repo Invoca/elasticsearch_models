@@ -668,7 +668,6 @@ RSpec.describe ElasticsearchModels::Base do
             let(:query_conditions) { "Hello" }
 
             it "returns all matching entries" do
-              expect(response.models.count).to eq(4)
               expect_response_models_match(response.models, [@dummy_model1, @dummy_model2, @dummy_model3, @dummy_model4])
             end
           end
@@ -677,7 +676,6 @@ RSpec.describe ElasticsearchModels::Base do
             let(:query_conditions) { { my_other_string: "Hello" } }
 
             it "returns all matching entries" do
-              expect(response.models.count).to eq(2)
               expect_response_models_match(response.models, [@dummy_model3, @dummy_model4])
             end
           end
@@ -687,7 +685,6 @@ RSpec.describe ElasticsearchModels::Base do
             let(:match_conditions) { { my_other_string: "Hello3" } }
 
             it "returns all matching entries" do
-              expect(response.models.count).to eq(1)
               expect_response_models_match(response.models, [@dummy_model3])
             end
           end
@@ -707,7 +704,6 @@ RSpec.describe ElasticsearchModels::Base do
             let(:query_conditions) { 10 }
 
             it "returns all matching entries" do
-              expect(response.models.count).to eq(2)
               expect_response_models_match(response.models, [@dummy_model1, @dummy_model4])
             end
           end
@@ -716,7 +712,6 @@ RSpec.describe ElasticsearchModels::Base do
             let(:query_conditions) { { my_decimal: 1.21 } }
 
             it "returns all matching entries" do
-              expect(response.models.count).to eq(1)
               expect_response_models_match(response.models, [@dummy_model5])
             end
           end
@@ -726,7 +721,6 @@ RSpec.describe ElasticsearchModels::Base do
             let(:match_conditions) { { my_other_string: "1.21" } }
 
             it "returns all matching entries" do
-              expect(response.models.count).to eq(1)
               expect_response_models_match(response.models, [@dummy_model2])
             end
           end
@@ -745,7 +739,6 @@ RSpec.describe ElasticsearchModels::Base do
 
             it "returns all matching entries" do
               skip("Semaphore's version of Elasticsearch does not support Full Text Query of Ranges") if ENV["SEMAPHORE_CI_ELASTICSEARCH"].present?
-              expect(response.models.count).to eq(2)
               expect_response_models_match(response.models, [@dummy_model1, @dummy_model2])
             end
           end
@@ -754,7 +747,6 @@ RSpec.describe ElasticsearchModels::Base do
             let(:query_conditions) { { my_time: Date.new(2010, 1, 1)..Date.new(2010, 1, 3) } }
 
             it "returns all matching entries" do
-              expect(response.models.count).to eq(1)
               expect_response_models_match(response.models, [@dummy_model3])
             end
           end
@@ -764,7 +756,6 @@ RSpec.describe ElasticsearchModels::Base do
             let(:match_conditions) { { my_float: 15.5 } }
 
             it "returns all matching entries" do
-              expect(response.models.count).to eq(1)
               expect_response_models_match(response.models, [@dummy_model1])
             end
           end
