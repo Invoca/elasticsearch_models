@@ -37,9 +37,11 @@ module ElasticsearchModels
       end
 
       def where(**params)
-        params_with_indices = params[:_indices] ? params : params.merge(_indices: index_name)
-        search_params = Query::Builder.new(params_with_indices.merge(query_types: type)).search_params
-        Query::Response.new(client_connection.search(search_params))
+        Query::Response.new(client_connection.search(query_params(**params)))
+      end
+
+      def count(**params)
+        client_connection.count(query_params(**params))["count"]
       end
 
       def client_connection
@@ -63,6 +65,13 @@ module ElasticsearchModels
       def query_types
         class_names = ancestors.select { |ancestor| ancestor.is_a?(Class) }
         class_names.take_while { |klass| klass != ElasticsearchModels::Base }.map(&:name) # returns all parent classes up to ElasticsearchModels::Base
+      end
+
+      private
+
+      def query_params(**params)
+        params_with_indices = params[:_indices] ? params : params.merge(_indices: index_name)
+        Query::Builder.new(params_with_indices.merge(query_types: type)).search_params
       end
     end
 

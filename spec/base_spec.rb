@@ -399,7 +399,7 @@ RSpec.describe ElasticsearchModels::Base do
             dummy_owner.id = 1
             DummyOwnerClass.find_value = dummy_owner
 
-            DummyElasticSearchModel.create!(my_string: "Hello", dummy_owner: dummy_owner)
+            DummyElasticSearchModel.create!(my_string: "Hello", dummy_owner_id: dummy_owner.id)
 
             expect(refresh_and_find_search_hit["_source"]).to eq(@default_fields.merge("dummy_owner_id" => 1))
           end
@@ -511,6 +511,22 @@ RSpec.describe ElasticsearchModels::Base do
         refresh_index
         queried_model = DummyElasticSearchModel.where.models.first
         expect(queried_model.my_other_string).to eq("Hello")
+      end
+
+      context "ignore unavailable indexes" do
+        before(:each) do
+          @missing_index_name = "non_existent_index"
+          expect(@elasticsearch_test_client.indices.exists?(index: @missing_index_name)).to eq(false)
+        end
+
+        it "by default raises an error if attempting to search an index that doesn't exist" do
+          expected_error = Elasticsearch::Transport::Transport::Errors::NotFound
+          expect { DummyElasticSearchModel.where(_indices: [@missing_index_name]) }.to raise_error(expected_error)
+        end
+
+        it "does not raise an error if attempting to search an index that doesn't exist but _ignore_available option is true"  do
+          expect { DummyElasticSearchModel.where(_indices: [@missing_index_name], _ignore_unavailable: true) }.to_not raise_error
+        end
       end
 
       context "with inheritance" do
@@ -942,6 +958,77 @@ RSpec.describe ElasticsearchModels::Base do
                                                          my_time:   Range.new(time - 5.minutes, time + 5.minutes))
           expect(query_response.models.count).to eq(2)
           expect(query_response.models.sort.map(&:to_store)).to eq([dummy_model1, dummy_model2].sort.map(&:to_store))
+        end
+      end
+    end
+
+    context ".count" do
+      it "returns count of documents that match simple query params" do
+        DummyElasticSearchModel.create!(my_string: "Hello", my_int: 1)
+        DummyElasticSearchModel.create!(my_string: "Hello2", my_int: 1)
+        DummyElasticSearchModel.create!(my_string: "Hello3", my_int: 1)
+        DummyElasticSearchModel.create!(my_string: "Hello", my_int: 2)
+        refresh_index
+
+        expect(DummyElasticSearchModel.count(my_string: "Hello")).to eq(2)
+      end
+
+      it "returns the count of documents matching dynamic query params" do
+        time = Time.now
+        successful_query_fields = { my_string: "Hello", my_int: 150, my_enum: :Yes, my_float: 1.0, my_time: time }
+
+        DummyElasticSearchModel.create!(my_string: "Hello", my_int: 150, my_enum: :Yes, my_float: 1.0, my_time: time) # Should be returned
+        DummyElasticSearchModel.create!(my_string: "Goodbye", my_int: 1, my_enum: :Yes, my_float: 1.0, my_time: time) # Should be returned
+
+        DummyElasticSearchModel.create!(successful_query_fields.merge(my_string: "Hi"))
+        DummyElasticSearchModel.create!(successful_query_fields.merge(my_int: "2"))
+        DummyElasticSearchModel.create!(successful_query_fields.merge(my_enum: :No))
+        DummyElasticSearchModel.create!(successful_query_fields.merge(my_float: 1.5))
+        DummyElasticSearchModel.create!(successful_query_fields.merge(my_time: time - 1.hour))
+        DummyElasticSearchModel.create!(my_string: "Hi")
+        DummyElasticSearchModel.create!(my_string: "Hi", my_hash: { a: { b: 1, c: 2 } })
+        DummyElasticSearchModel.create!(my_string: "Hi", my_hash: { a: { b: 1, c: 3 } })
+        refresh_index
+
+        count = DummyElasticSearchModel.count(my_string: ["Hello", "Goodbye"],
+                                              my_int:    [1, Range.new(100, 200)],
+                                              my_enum:   :Yes,
+                                              my_float:  1.0,
+                                              my_time:   Range.new(time - 5.minutes, time + 5.minutes))
+        expect(count).to eq(2)
+      end
+
+      it "raises an error when including the _size param" do
+        expect do
+          DummyElasticSearchModel.count(my_string: ["Hello", "Goodbye"], _size: 10)
+        end.to raise_error(ArgumentError, "URL parameter 'size' is not supported")
+      end
+
+      it "raises an error when including the _from param" do
+        expect do
+          DummyElasticSearchModel.count(my_string: ["Hello", "Goodbye"], _from: 10)
+        end.to raise_error(ArgumentError, "URL parameter 'from' is not supported")
+      end
+
+      it "raises an error when including the _sort_by param" do
+        expect do
+          DummyElasticSearchModel.count(my_string: ["Hello", "Goodbye"], _sort_by: { my_time: :asc })
+        end.to raise_error(Elasticsearch::Transport::Transport::Errors::BadRequest, /request does not support \[sort\]/)
+      end
+
+      context "ignore unavailable indexes" do
+        before(:each) do
+          @missing_index_name = "non_existent_index"
+          expect(@elasticsearch_test_client.indices.exists?(index: @missing_index_name)).to eq(false)
+        end
+
+        it "by default raises an error if attempting to search an index that doesn't exist" do
+          expected_error = Elasticsearch::Transport::Transport::Errors::NotFound
+          expect { DummyElasticSearchModel.count(_indices: [@missing_index_name]) }.to raise_error(expected_error)
+        end
+
+        it "does not raise an error if attempting to search an index that doesn't exist but _ignore_available option is true"  do
+          expect { DummyElasticSearchModel.count(_indices: [@missing_index_name], _ignore_unavailable: true) }.to_not raise_error
         end
       end
     end
