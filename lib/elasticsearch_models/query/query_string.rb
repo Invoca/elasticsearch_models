@@ -62,7 +62,7 @@ module ElasticsearchModels
         end
 
         def format_string(string)
-          string.squeeze(" ").gsub(SPECIAL_CHARACTERS_REGEX, '\\\1').gsub(" ", " AND ")
+          string.squeeze(" ").gsub(" ", " AND ").gsub(SPECIAL_CHARACTERS_REGEX) { |match| "\\#{match}" }
         end
       end
     end
