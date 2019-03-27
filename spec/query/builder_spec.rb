@@ -373,8 +373,7 @@ RSpec.describe ElasticsearchModels::Query::Builder do
         {
           "some.field.keyword" => {
             terms: {
-              field: "some.field.keyword",
-              order: { "_count" => "desc" }
+              field: "some.field.keyword"
             }
           }
         }
