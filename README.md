@@ -249,7 +249,10 @@ DummyElasticSearchModel.where(_aggs: { field: "my_string.keyword", size: 2 })
 DummyElasticSearchModel.where(_aggs: { field: "my_string.keyword", order: "_key" })
 
 # Aggregate on a single field with ordering on a different field in a different direction
-DummyElasticSearchModel.where(_aggs: { field: "my_string.keyword", order: ["_key", "asc"] })
+DummyElasticSearchModel.where(_aggs: { field: "my_string.keyword", order: { "_key" => "asc" } })
+
+# Aggregate on a single field with multiple ordering options
+DummyElasticSearchModel.where(_aggs: { field: "my_string.keyword", order: ["_key", { "_count" => "asc" }] })
 
 # Aggregate on a single field with sub-aggregations (supports infinite nestings)
 DummyElasticSearchModel.where(_aggs: { field: "my_string.keyword", aggs: "my_id" })
@@ -284,9 +287,8 @@ DummyElasticSearchModel.distinct_values("my_string.keyword", where: { _q: { "Hey
 
 # Distinct Values for single term with order
 DummyElasticSearchModel.distinct_values("my_string.keyword", order: "_key")
-DummyElasticSearchModel.distinct_values("my_string.keyword", order: "_count")
-DummyElasticSearchModel.distinct_values("my_string.keyword", order: ["_count", "asc"])
-DummyElasticSearchModel.distinct_values("my_string.keyword", order: ["_key", "asc"])
+DummyElasticSearchModel.distinct_values("my_string.keyword", order: { "_count" => "asc" })
+DummyElasticSearchModel.distinct_values("my_string.keyword", order: ["_key", { "_count" => "asc" }])
 
 # Distinct Values with partition
 DummyElasticSearchModel.distinct_values("my_string.keyword", partition: 0, num_partitions: 2)

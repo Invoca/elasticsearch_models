@@ -14,8 +14,7 @@ RSpec.describe ElasticsearchModels::Query::Aggregations do
           aggs: {
             "some.field.keyword" => {
               terms: {
-                field: "some.field.keyword",
-                order: { "_count" => "desc" }
+                field: "some.field.keyword"
               }
             }
           }
@@ -33,14 +32,12 @@ RSpec.describe ElasticsearchModels::Query::Aggregations do
             aggs: {
               "some.field.keyword" => {
                 terms: {
-                  field: "some.field.keyword",
-                  order: { "_count" => "desc" }
+                  field: "some.field.keyword"
                 }
               },
               "some.field.integer" => {
                 terms: {
-                  field: "some.field.integer",
-                  order: { "_count" => "desc" }
+                  field: "some.field.integer"
                 }
               }
             }
@@ -59,13 +56,12 @@ RSpec.describe ElasticsearchModels::Query::Aggregations do
                 terms: {
                   field: "some.field.keyword",
                   size:  10_000,
-                  order: { "_key" => "desc" }
+                  order: [{ "_key" => "desc" }]
                 }
               },
               "some.field.integer" => {
                 terms: {
-                  field: "some.field.integer",
-                  order: { "_count" => "desc" }
+                  field: "some.field.integer"
                 }
               }
             }
@@ -82,20 +78,17 @@ RSpec.describe ElasticsearchModels::Query::Aggregations do
             aggs: {
               "some.field.keyword" => {
                 terms: {
-                  field: "some.field.keyword",
-                  order: { "_count" => "desc" }
+                  field: "some.field.keyword"
                 }
               },
               "some.int" => {
                 terms: {
-                  field: "some.int",
-                  order: { "_count" => "desc" }
+                  field: "some.int"
                 }
               },
               "some.other.int" => {
                 terms: {
-                  field: "some.other.int",
-                  order: { "_count" => "desc" }
+                  field: "some.other.int"
                 }
               }
             }
@@ -130,7 +123,7 @@ RSpec.describe ElasticsearchModels::Query::Aggregations do
                 terms: {
                   field: "some.field.keyword",
                   size: 10_000,
-                  order: { "_key" => "desc" }
+                  order: [{ "_key" => "desc" }]
                 }
               }
             }
@@ -149,13 +142,12 @@ RSpec.describe ElasticsearchModels::Query::Aggregations do
                     terms: {
                       field: "some.field.keyword",
                       size: 10_000,
-                      order: { "_key" => "desc" }
+                      order: [{ "_key" => "desc" }]
                     },
                     aggs: {
                       "some.field.id" => {
                         terms: {
-                          field: "some.field.id",
-                          order: { "_count" => "desc" }
+                          field: "some.field.id"
                         }
                       }
                     }
@@ -176,14 +168,13 @@ RSpec.describe ElasticsearchModels::Query::Aggregations do
                     terms: {
                       field: "some.field.keyword",
                       size: 10_000,
-                      order: { "_key" => "desc" }
+                      order: [{ "_key" => "desc" }]
                     },
                     aggs: {
                       "some.field.id" => {
                         terms: {
                           field: "some.field.id",
-                          size: 20,
-                          order: { "_count" => "desc" }
+                          size: 20
                         }
                       }
                     }
@@ -204,19 +195,17 @@ RSpec.describe ElasticsearchModels::Query::Aggregations do
                     terms: {
                       field: "some.field.keyword",
                       size: 10_000,
-                      order: { "_key" => "desc" }
+                      order: [{ "_key" => "desc" }]
                     },
                     aggs: {
                       "some.field.id" => {
                         terms: {
-                          field: "some.field.id",
-                          order: { "_count" => "desc" }
+                          field: "some.field.id"
                         }
                       },
                       "some.field.other" => {
                         terms: {
-                          field: "some.field.other",
-                          order: { "_count" => "desc" }
+                          field: "some.field.other"
                         }
                       }
                     }
