@@ -219,3 +219,15 @@ class DummyElasticSearchModel < ElasticsearchModels::Base
   end
 end
 ```
+
+In order for searches on new models to include the old name, you need to implement **search_type** method on your new class.
+
+```ruby
+class ShinyNewModel < ElasticsearchModels::Base
+  class << self
+    def search_type
+     [type, "OldReplacedModel"]
+    end
+  end
+end
+```

@@ -90,7 +90,11 @@ RSpec.describe ElasticsearchModels::Base do
   end
 
   class DummySub2AModel < DummySub1AModel; end
-  class DummySub1BModel < DummyElasticSearchModel; end
+  class DummySub1BModel < DummyElasticSearchModel
+    def self.search_type
+      [type, "DummyReplacedModel"]
+    end
+  end
 
   class DummyUniqueIndexModel < DummyElasticSearchModel
     def self.index_name
@@ -530,6 +534,16 @@ RSpec.describe ElasticsearchModels::Base do
         query_response = DummyElasticSearchModel.where
         expect(query_response.models.count).to eq(1)
         expect(query_response.models.first.class.name).to eq("DummySub1BModel")
+        expect(query_response.models.first.my_other_string).to eq("Goodbye")
+      end
+
+      it "allows classes to define alternate search terms in the case of model changes" do
+        DummyReplacedModel.create!(my_string: "Hello4", my_other_string: "Goodbye")
+        refresh_index
+        query_response = DummySub1BModel.where
+        expect(query_response.models.count).to eq(1)
+        expect(query_response.models.first.class.name).to eq("DummySub1BModel")
+        expect(query_response.models.first.my_other_string).to eq("Goodbye")
       end
 
       context "ignore unavailable indexes" do

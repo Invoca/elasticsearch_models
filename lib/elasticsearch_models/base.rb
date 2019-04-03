@@ -56,6 +56,11 @@ module ElasticsearchModels
         name
       end
 
+      # Derived classes can use this to provide alternate search terms in the case of model changes
+      def search_type
+        type
+      end
+
       # Derived classes can replace this method in order to handle changes to class names or to restrict
       # the classes that are returned
       def model_class_from_name(class_name)
@@ -69,15 +74,17 @@ module ElasticsearchModels
       end
 
       def query_types
-        class_names = ancestors.select { |ancestor| ancestor.is_a?(Class) }
-        class_names.take_while { |klass| klass != ElasticsearchModels::Base }.map(&:name) # returns all parent classes up to ElasticsearchModels::Base
+        parent_classes = ancestors.select { |ancestor| ancestor.is_a?(Class) }
+
+        # return all parent classes up to ElasticsearchModels::Base
+        parent_classes.take_while { |klass| klass != ElasticsearchModels::Base }.map(&:name)
       end
 
       private
 
       def query_params(**params)
         params_with_indices = params[:_indices] ? params : params.merge(_indices: index_name)
-        Query::Builder.new(params_with_indices.merge(query_types: type)).search_params
+        Query::Builder.new(params_with_indices.merge(query_types: search_type)).search_params
       end
     end
 
