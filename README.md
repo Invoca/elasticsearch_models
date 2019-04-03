@@ -226,7 +226,7 @@ In order for searches on new models to include the old name, you need to impleme
 class ShinyNewModel < ElasticsearchModels::Base
   class << self
     def search_type
-     [type, "OldReplacedModel"]
+     ["OldReplacedModel", *super]
     end
   end
 end

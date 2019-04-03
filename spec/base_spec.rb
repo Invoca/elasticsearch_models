@@ -92,7 +92,7 @@ RSpec.describe ElasticsearchModels::Base do
   class DummySub2AModel < DummySub1AModel; end
   class DummySub1BModel < DummyElasticSearchModel
     def self.search_type
-      [type, "DummyReplacedModel"]
+      ["DummyReplacedModel", *super]
     end
   end
 
