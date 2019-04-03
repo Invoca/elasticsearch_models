@@ -99,7 +99,7 @@ RSpec.describe ElasticsearchModels::Base do
   end
 
   class DummyReplacedModel < DummyElasticSearchModel; end
-  
+
   context "DummyElasticSearchModel" do
     it "inherits from ElasticsearchModels::Base and Aggregate::Base" do
       dummy_model = DummyElasticSearchModel.create!(my_string: "Hello")
