@@ -37,7 +37,7 @@ module ElasticsearchModels
       end
 
       def where(**params)
-        Query::Response.new(client_connection.search(query_params(**params)))
+        Query::Response.new(client_connection.search(query_params(**params)), self)
       end
 
       def count(**params)
@@ -54,6 +54,12 @@ module ElasticsearchModels
 
       def type
         name
+      end
+
+      # Derived classes can replace this method in order to handle changes to class names or to restrict
+      # the classes that are returned
+      def model_class_from_name(class_name)
+        class_name.constantize
       end
 
       def from_store(search_hit)

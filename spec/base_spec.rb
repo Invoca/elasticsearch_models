@@ -67,6 +67,14 @@ RSpec.describe ElasticsearchModels::Base do
       def client_connection
         @client_connection ||= Elasticsearch::Client.new(host: "127.0.0.1", port: ENV["ELASTICSEARCH_TEST_PORT"] || 9250, scheme: "http")
       end
+
+      def model_class_from_name(class_name)
+        if class_name == "DummyReplacedModel"
+          DummySub1BModel
+        else
+          super
+        end
+      end
     end
 
     def fixup_aggregate_schema(loaded_version)
@@ -74,6 +82,7 @@ RSpec.describe ElasticsearchModels::Base do
         self.my_other_string = my_string
       end
     end
+
   end
 
   class DummySub1AModel < DummyElasticSearchModel
@@ -88,6 +97,9 @@ RSpec.describe ElasticsearchModels::Base do
       "unique_index"
     end
   end
+
+  class DummyReplacedModel < DummyElasticSearchModel; end
+
 
   context "DummyElasticSearchModel" do
     it "inherits from ElasticsearchModels::Base and Aggregate::Base" do
@@ -511,6 +523,14 @@ RSpec.describe ElasticsearchModels::Base do
         refresh_index
         queried_model = DummyElasticSearchModel.where.models.first
         expect(queried_model.my_other_string).to eq("Hello")
+      end
+
+      it "allows class names to be swapped during rehydration" do
+        DummyReplacedModel.create!(my_string: "Hello4", my_other_string: "Goodbye")
+        refresh_index
+        query_response = DummyElasticSearchModel.where
+        expect(query_response.models.count).to eq(1)
+        expect(query_response.models.first.class.name).to eq("DummySub1BModel")
       end
 
       context "ignore unavailable indexes" do

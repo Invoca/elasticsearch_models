@@ -12,8 +12,9 @@ class ElasticsearchModels::Query::Response
 
   attr_reader :models, :raw_response, :errors
 
-  def initialize(raw_response)
+  def initialize(raw_response, class_factory)
     @raw_response    = raw_response
+    @class_factory   = class_factory
     @models, @errors = parse_raw_response
   end
 
@@ -35,7 +36,7 @@ class ElasticsearchModels::Query::Response
   end
 
   def parse_hit(hit)
-    if (klass = hit["_source"]["rehydration_class"].constantize)
+    if (klass = @class_factory.model_class_from_name(hit["_source"]["rehydration_class"]))
       { model: klass.from_store(hit) }
     end
   rescue => ex
