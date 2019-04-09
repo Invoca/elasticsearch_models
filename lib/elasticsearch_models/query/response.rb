@@ -12,7 +12,7 @@ class ElasticsearchModels::Query::Response
 
   attr_reader :models, :raw_response, :errors, :aggregations
 
-  def initialize(raw_response, class_factory)
+  def initialize(raw_response, class_factory = nil)
     @raw_response    = raw_response
     @aggregations    = raw_response["aggregations"]
     @class_factory   = class_factory
