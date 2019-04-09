@@ -120,7 +120,7 @@ RSpec.describe ElasticsearchModels::Query::Response do
     context "#aggregations" do
       it "returns the raw aggregations response" do
         response = form_raw_response([create_search_hit], aggregations: [aggregation_hit("some.field", keys: ["value"])])
-        expect(ElasticsearchModels::Query::Response.new(response).aggregations).to eq(response["aggregations"])
+        expect(ElasticsearchModels::Query::Response.new(response, nil).aggregations).to eq(response["aggregations"])
       end
     end
   end
