@@ -123,7 +123,7 @@ DummyElasticSearchModel.where(_size: 25, _from: 32)
 #### Query String searching
 By providing the `_q` parameter, you can do Full Text Query String searching.
 
-String searching using the `_q` parameter is fuzzy by default (`*` on both ends of string so you can match in the middle of terms/strings). 
+String searching using the `_q` parameter is fuzzy by default (`*` on both ends of string so you can match in the middle of terms/strings).
 
 As well, search terms that include spaces will `AND` each term instead of the implicit `OR`
 
@@ -178,7 +178,7 @@ To query across multiple indices, add the `_indices` parameter in your query wit
 
 Not specifying the indices in a query will use the index name returned from `index_name` by the model you are querying.
 
-The intended usecase for this is to allow for querying across multiple indices that are sharded by time.
+The intended use case for this is to allow for querying across multiple indices that are sharded by time.
 
 Note: Names for indices are arbitrary: passing in an index_name into `_indices` that doesn't exist will return 0 documents.
 ```ruby
@@ -236,7 +236,7 @@ Supported Aggregation query params:
 
 ```ruby
 # Aggregate on a single term
-# Note: keyword terms are required for text fields that do not have fielddata enabled on the index 
+# Note: keyword terms are required for text fields that do not have fielddata enabled on the index
 DummyElasticSearchModel.where(_aggs: "my_string.keyword")
 
 # Aggregate on a multiple terms
@@ -297,4 +297,34 @@ DummyElasticSearchModel.distinct_values("my_string.keyword", partition: 1, num_p
 # Distinct Values with Additional Fields
 DummyElasticSearchModel.distinct_values("my_int", additional_fields: ["my_string"])
 DummyElasticSearchModel.distinct_values("my_int", additional_fields: ["my_int", "my_string"])
+```
+
+### Handling Model Name Changes
+If you end up changing the name of a model, queries will not be able load elasticsearch data with the old name.  You can handle this
+  by implementing a **model_class_from_name** method on your base search class.  For example:
+
+```ruby
+class DummyElasticSearchModel < ElasticsearchModels::Base
+  class << self
+    def model_class_from_name(class_name)
+      if class_name == "OldReplacedModel"
+        ShinyNewModel
+      else
+        super
+      end
+    end
+  end
+end
+```
+
+In order for searches on new models to include the old name, you need to implement **search_type** method on your new class.
+
+```ruby
+class ShinyNewModel < ElasticsearchModels::Base
+  class << self
+    def search_type
+     ["OldReplacedModel", *super]
+    end
+  end
+end
 ```

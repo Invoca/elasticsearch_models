@@ -3,6 +3,12 @@
 RSpec.describe ElasticsearchModels::Query::Response do
   INDEX = "test_index"
 
+  class TestKlassFactory
+    def self.model_class_from_name(class_name)
+      class_name.constantize
+    end
+  end
+
   class DummyKlass < ElasticsearchModels::Base
     attribute :my_string, :string
     attribute :my_bool,   :boolean
@@ -63,14 +69,14 @@ RSpec.describe ElasticsearchModels::Query::Response do
     context "#raw_response" do
       it "stores the full query response" do
         response = form_raw_response([create_search_hit])
-        expect(ElasticsearchModels::Query::Response.new(response).raw_response).to eq(response)
+        expect(ElasticsearchModels::Query::Response.new(response, TestKlassFactory).raw_response).to eq(response)
       end
     end
 
     context "#models" do
       it "returns rehydrated models" do
         search_hits    = [create_search_hit, create_search_hit(body_params: { "my_string" => "Hi", "my_enum" => "Goodbye", "my_bool" => true })]
-        query_response = ElasticsearchModels::Query::Response.new(form_raw_response(search_hits))
+        query_response = ElasticsearchModels::Query::Response.new(form_raw_response(search_hits), TestKlassFactory)
 
         expect(query_response.errors).to be_empty
         expect(query_response.models.count).to eq(2)
@@ -85,7 +91,7 @@ RSpec.describe ElasticsearchModels::Query::Response do
       end
 
       it "includes metadata fields in the returned rehydrated model" do
-        query_response = ElasticsearchModels::Query::Response.new(form_raw_response([create_search_hit]))
+        query_response = ElasticsearchModels::Query::Response.new(form_raw_response([create_search_hit]), TestKlassFactory)
 
         expect(query_response.errors).to be_empty
         expect(query_response.models.count).to eq(1)
@@ -98,7 +104,7 @@ RSpec.describe ElasticsearchModels::Query::Response do
 
       it "returns errors if there's an exception while rehydrating a model and not return that model" do
         search_hits    = [create_search_hit, create_search_hit(body_params: { "rehydration_class" => "invalid class" })]
-        query_response = ElasticsearchModels::Query::Response.new(form_raw_response(search_hits))
+        query_response = ElasticsearchModels::Query::Response.new(form_raw_response(search_hits), TestKlassFactory)
 
         expect(query_response.models.count).to eq(1)
         expect(query_response.errors.count).to eq(1)
