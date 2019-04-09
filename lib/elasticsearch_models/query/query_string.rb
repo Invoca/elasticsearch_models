@@ -4,7 +4,7 @@ module ElasticsearchModels
   module Query
     class QueryString
       # http://lucene.apache.org/core/3_4_0/queryparsersyntax.html#Escaping%20Special%20Characters
-      SPECIAL_CHARACTERS_REGEX = /(#{Regexp.escape('& | ! ( ) { } [ ] ^ " ~ * ?').split('\\ ').join('|')})/
+      SPECIAL_CHARACTERS_REGEX = /(#{Regexp.escape('+ - & | ! ( ) { } [ ] ^ " ~ * ? : \\ /').split('\\ ').join('|')})/
 
       class << self
         def term_for(condition)

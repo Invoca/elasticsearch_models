@@ -32,8 +32,8 @@ RSpec.describe ElasticsearchModels::Query::QueryString do
       end
 
       context "escaping special characters" do
-        let(:condition) { '~tex*t wi[t]h "s{pec}ial" #v@lue$!^' }
-        let(:expected_term) { '(*\~tex\*t AND wi\[t\]h AND \"s\{pec\}ial\" AND #v@lue$\!\^*)' }
+        let(:condition) { '~tex*t wi[t]h "s{pe\c}ia/l" #v@lue$!^ a+l|l o-ve:r' }
+        let(:expected_term) { '(*\~tex\*t AND wi\[t\]h AND \"s\{pe\\\\c\}ia\/l\" AND #v@lue$\!\^ AND a\+l\|l AND o\-ve\:r*)' }
         it_behaves_like "a search term"
       end
     end
