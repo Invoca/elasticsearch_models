@@ -502,7 +502,7 @@ RSpec.describe ElasticsearchModels::Base do
       end
     end
 
-    context ".insert_squashed_model_into_store" do
+    context ".insert!" do
       before(:each) do
         @default_fields = { "my_string" => "Hello", "my_bool" => false,
                             "data_schema_version" => "1.0",
@@ -514,8 +514,8 @@ RSpec.describe ElasticsearchModels::Base do
         dummy_model = DummyElasticSearchModel.build!(my_string: "Hello")
         expect(DummyElasticSearchModel.where.models.count).to eq(0)
 
-        response = DummyElasticSearchModel.insert_squashed_model_into_store(dummy_model.deep_squash_to_store,
-                                                                            dummy_model.index_name)
+        response = DummyElasticSearchModel.insert!(dummy_model.deep_squash_to_store,
+                                                   dummy_model.index_name)
         refresh_index
         expect(DummyElasticSearchModel.where.models.count).to eq(1)
         expect(response.dig("_shards", "successful")).to eq(1)
@@ -532,7 +532,7 @@ RSpec.describe ElasticsearchModels::Base do
         expected_error = "Error creating elasticsearch model. Body: {\"rehydration_class\"=>\"DummyElasticSearchModel\", "\
                          "\"query_types\"=>[\"DummyElasticSearchModel\"], \"my_string\"=>\"Hello\", \"my_bool\"=>false, "\
                          "\"data_schema_version\"=>\"1.0\"}. Response: {\"_shards\"=>{\"total\"=>2, \"successful\"=>0, \"failed\"=>1}}"
-        expect { DummyElasticSearchModel.insert_squashed_model_into_store(dummy_model.deep_squash_to_store, dummy_model.index_name) }
+        expect { DummyElasticSearchModel.insert!(dummy_model.deep_squash_to_store, dummy_model.index_name) }
           .to raise_error(ElasticsearchModels::Base::CreateError, expected_error)
       end
     end

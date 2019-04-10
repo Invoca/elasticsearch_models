@@ -23,7 +23,7 @@ module ElasticsearchModels
     class << self
       def create!(*params)
         model    = build!(*params)
-        response = insert_squashed_model_into_store(model.deep_squash_to_store, model.index_name)
+        response = insert!(model.deep_squash_to_store, model.index_name)
         model.assign_metadata_fields(response)
         model
       end
@@ -36,12 +36,13 @@ module ElasticsearchModels
         model
       end
 
-      def insert_squashed_model_into_store(squashed_model, index)
-        response = client_connection.index(index: index, type: DEPRECATED_TYPE, body: squashed_model)
+      def insert!(body_hash, index)
+        body_hash.is_a?(Hash) or raise "body_hash must be of type Hash, was of type #{body_hash.class}."
+        response = client_connection.index(index: index, type: DEPRECATED_TYPE, body: body_hash)
         if response.dig("_shards", "successful").to_i > 0
           response
         else
-          raise CreateError, "Error creating elasticsearch model. Body: #{squashed_model.inspect}. Response: #{response.inspect}"
+          raise CreateError, "Error creating elasticsearch model. Body: #{body_hash.inspect}. Response: #{response.inspect}"
         end
       end
 
