@@ -269,8 +269,8 @@ RSpec.describe ElasticsearchModels::Base do
         expect(dummy_connection).to receive(:index).and_return(error_response)
 
         expected_error = "Error creating elasticsearch model. Body: {\"rehydration_class\"=>\"DummyElasticSearchModel\", "\
-                         "\"query_types\"=>[\"DummyElasticSearchModel\"], \"my_string\"=>\"Hello\", \"my_bool\"=>false, \"data_schema_version\"=>\"1.0\"}. "\
-                         "Response: {\"_shards\"=>{\"total\"=>2, \"successful\"=>0, \"failed\"=>1}}"
+                         "\"query_types\"=>[\"DummyElasticSearchModel\"], \"my_string\"=>\"Hello\", \"my_bool\"=>false, "\
+                         "\"data_schema_version\"=>\"1.0\"}. Response: {\"_shards\"=>{\"total\"=>2, \"successful\"=>0, \"failed\"=>1}}"
         expect { DummyElasticSearchModel.create!(my_string: "Hello") }.to raise_error(ElasticsearchModels::Base::CreateError, expected_error)
       end
 
@@ -522,7 +522,7 @@ RSpec.describe ElasticsearchModels::Base do
       end
 
       it "raises an exception if the insert fails" do
-        dummy_connection     = Elasticsearch::Client.new
+        dummy_connection = Elasticsearch::Client.new
         dummy_model = DummyElasticSearchModel.build!(my_string: "Hello")
         expect(DummyElasticSearchModel).to receive(:client_connection).and_return(dummy_connection)
 
@@ -530,10 +530,10 @@ RSpec.describe ElasticsearchModels::Base do
         expect(dummy_connection).to receive(:index).and_return(error_response)
 
         expected_error = "Error creating elasticsearch model. Body: {\"rehydration_class\"=>\"DummyElasticSearchModel\", "\
-                         "\"query_types\"=>[\"DummyElasticSearchModel\"], \"my_string\"=>\"Hello\", \"my_bool\"=>false, \"data_schema_version\"=>\"1.0\"}. "\
-                         "Response: {\"_shards\"=>{\"total\"=>2, \"successful\"=>0, \"failed\"=>1}}"
+                         "\"query_types\"=>[\"DummyElasticSearchModel\"], \"my_string\"=>\"Hello\", \"my_bool\"=>false, "\
+                         "\"data_schema_version\"=>\"1.0\"}. Response: {\"_shards\"=>{\"total\"=>2, \"successful\"=>0, \"failed\"=>1}}"
         expect { DummyElasticSearchModel.insert_squashed_model_into_store(dummy_model.deep_squash_to_store, dummy_model.index_name) }
-            .to raise_error(ElasticsearchModels::Base::CreateError, expected_error)
+          .to raise_error(ElasticsearchModels::Base::CreateError, expected_error)
       end
     end
 
