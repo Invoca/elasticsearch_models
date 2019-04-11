@@ -68,6 +68,7 @@ Queries return a `ElasticsearchModels::QueryResponse` which will contain `raw_re
 * `raw_response`: Full response from elasticsearch query.
 * `models`: Rehydrated models from the query response (based on `_type`).
 * `errors`: Errors that occurred when attempting to rehydrate models.
+* `aggregations`: Raw response for any aggregations included in the search.
 
 #### Query by Elasticsearch document id or attributes
 
@@ -117,6 +118,31 @@ By default, 10 entries are returned from spot 0.
 ```ruby
 # Return 25 entries starting from spot 32
 DummyElasticSearchModel.where(_size: 25, _from: 32)
+```
+
+#### Query String searching
+By providing the `_q` parameter, you can do Full Text Query String searching.
+
+String searching using the `_q` parameter is fuzzy by default (`*` on both ends of string so you can match in the middle of terms/strings).
+
+As well, search terms that include spaces will `AND` each term instead of the implicit `OR`
+
+e.g. `full text` search string will be converted to the following query string `(*full AND text*)`
+```ruby
+# Query by full text string searching
+DummyElasticSearchModel.where(_q: "Hello")
+
+# Query by fuzzy text searching on a specific field
+DummyElasticSearchModel.where(_q: { my_string: "Hello" })
+
+# Query by attributes in a range as well
+DummyElasticSearchModel.where(_q: { my_string: "Hi", my_int: 5..10) })
+
+# Query by attributes where at least 1 value matches
+DummyElasticSearchModel.where(_q: { my_string: "Hi", my_int: [1, (5..10)] })
+
+# Query by nested classes or hash fields
+DummyElasticSearchModel.where(_q: { my_nested_class: { nested_hash_field: { a: 1, b: 2 } } })
 ```
 
 #### Querying with Inheritance
@@ -192,6 +218,46 @@ DummyDailyIndexModel.where(_indices: "wrong_index_name").models
 => []
 ```
 
+#### Querying with Aggregations
+To query and receive term aggregations back, simply add the `_aggs` parameter to your query along with the term and/or term with options that you like to get an aggregation for.
+
+The default ordering for an aggregation is by the `_count` in `desc` order
+
+Supported Aggregation query params:
+
+**Required Arguments**:
+* `field`: the field to do an aggregation on
+
+**Optional Arguments**:
+* `size`: the limit on how many terms to return as part of the terms aggregation
+* `order`: The ordering for the response
+* `partitions`: The current partition to query in (requires `num_partitions` if set)
+* `num_partitions`: The amount of partitions to bucket results into (requires `partition` if set)
+
+```ruby
+# Aggregate on a single term
+# Note: keyword terms are required for text fields that do not have fielddata enabled on the index
+DummyElasticSearchModel.where(_aggs: "my_string.keyword")
+
+# Aggregate on a multiple terms
+DummyElasticSearchModel.where(_aggs: ["my_string.keyword", "my_int.id"])
+
+# Aggregate on a single field with a limit on the result size
+DummyElasticSearchModel.where(_aggs: { field: "my_string.keyword", size: 2 })
+
+# Aggregate on a single field with ordering on a different field (default desc order)
+DummyElasticSearchModel.where(_aggs: { field: "my_string.keyword", order: "_key" })
+
+# Aggregate on a single field with ordering on a different field in a different direction
+DummyElasticSearchModel.where(_aggs: { field: "my_string.keyword", order: { "_key" => "asc" } })
+
+# Aggregate on a single field with multiple ordering options
+DummyElasticSearchModel.where(_aggs: { field: "my_string.keyword", order: ["_key", { "_count" => "asc" }] })
+
+# Aggregate on a single field with sub-aggregations (supports infinite nestings)
+DummyElasticSearchModel.where(_aggs: { field: "my_string.keyword", aggs: "my_id" })
+```
+
 ### Retrieving Count of Documents
 If you only need to query for the count of documents, you can call `.count` with normal query params. The count will be the return value.
 
@@ -202,8 +268,39 @@ Note: You will need to exclude `_size`, `_from`, and `_sort_by` params.
 DummyElasticSearchModel.count(my_string: "Hi", my_int: 2) # => 2
 ```
 
+### Retrieving Distinct Values for a Field
+If you would like to find all of the distinct values for a specific field, you can call `.distinct_values` with normal Aggregation query params.
+
+This method of aggregation supports one layer of sub aggregations only.
+```ruby
+# Distinct Values for single term
+DummyElasticSearchModel.distinct_values("my_string.keyword")
+
+# Distinct Values for single term with a response size limit
+DummyElasticSearchModel.distinct_values("my_string.keyword", size: 10)
+
+# Distinct Values for single term with Query filtering
+DummyElasticSearchModel.distinct_values("my_string.keyword", where: { my_string: "Alec" } })
+
+# Distinct Values for single term Search Query filtering
+DummyElasticSearchModel.distinct_values("my_string.keyword", where: { _q: { "Hey" } })
+
+# Distinct Values for single term with order
+DummyElasticSearchModel.distinct_values("my_string.keyword", order: "_key")
+DummyElasticSearchModel.distinct_values("my_string.keyword", order: { "_count" => "asc" })
+DummyElasticSearchModel.distinct_values("my_string.keyword", order: ["_key", { "_count" => "asc" }])
+
+# Distinct Values with partition
+DummyElasticSearchModel.distinct_values("my_string.keyword", partition: 0, num_partitions: 2)
+DummyElasticSearchModel.distinct_values("my_string.keyword", partition: 1, num_partitions: 2)
+
+# Distinct Values with Additional Fields
+DummyElasticSearchModel.distinct_values("my_int", additional_fields: ["my_string"])
+DummyElasticSearchModel.distinct_values("my_int", additional_fields: ["my_int", "my_string"])
+```
+
 ### Handling Model Name Changes
-If you end up changing the name of a model, queries will not be able load elasticsearch data with the old name.  You can handle this 
+If you end up changing the name of a model, queries will not be able load elasticsearch data with the old name.  You can handle this
   by implementing a **model_class_from_name** method on your base search class.  For example:
 
 ```ruby

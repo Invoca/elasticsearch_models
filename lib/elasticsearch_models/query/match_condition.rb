@@ -15,6 +15,14 @@ module ElasticsearchModels
           end
         end
 
+        def query_string(string)
+          {
+            query_string: {
+              query: string
+            }
+          }
+        end
+
         private
 
         def range_condition(key, value)
