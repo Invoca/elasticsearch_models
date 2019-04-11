@@ -535,6 +535,14 @@ RSpec.describe ElasticsearchModels::Base do
         expect { DummyElasticSearchModel.insert!(dummy_model.deep_squash_to_store, dummy_model.index_name) }
           .to raise_error(ElasticsearchModels::Base::CreateError, expected_error)
       end
+
+      it "raises an exception if a hash is not passed in as the first argument" do
+        dummy_model = DummyElasticSearchModel.build!(my_string: "Hello")
+        expect(dummy_model.class).to_not eq(Hash)
+
+        expect { DummyElasticSearchModel.insert!(dummy_model, dummy_model.index_name) }
+          .to raise_error(ArgumentError, "body_hash must be of type Hash, was of type DummyElasticSearchModel.")
+      end
     end
 
     context ".where" do

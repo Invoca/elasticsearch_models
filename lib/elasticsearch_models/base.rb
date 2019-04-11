@@ -37,7 +37,7 @@ module ElasticsearchModels
       end
 
       def insert!(body_hash, index)
-        body_hash.is_a?(Hash) or raise "body_hash must be of type Hash, was of type #{body_hash.class}."
+        body_hash.is_a?(Hash) or raise ArgumentError, "body_hash must be of type Hash, was of type #{body_hash.class}."
         response = client_connection.index(index: index, type: DEPRECATED_TYPE, body: body_hash)
         if response.dig("_shards", "successful").to_i > 0
           response
