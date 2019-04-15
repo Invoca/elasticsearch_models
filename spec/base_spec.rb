@@ -268,7 +268,11 @@ RSpec.describe ElasticsearchModels::Base do
         }
         expect(dummy_connection).to receive(:index).and_return(error_response)
 
-        expected_error = "Error creating elasticsearch model. Params: [{:my_string=>\"Hello\"}]. Response: "\
+
+        {"rehydration_class"=>"DummyElasticSearchModel", "query_types"=>["DummyElasticSearchModel"], "my_string"=>"Hello", "my_bool"=>false, "data_schema_version"=>"1.0"}
+
+        expected_error = "Error creating elasticsearch model. Params: {\"rehydration_class\"=>\"DummyElasticSearchModel\", \"query_types\"=>[\"DummyElasticSearchModel\"],"\
+                         " \"my_string\"=>\"Hello\", \"my_bool\"=>false, \"data_schema_version\"=>\"1.0\"}. Response: "\
                          "{\"_shards\"=>{\"total\"=>2, \"successful\"=>0, \"failed\"=>1}}"
         expect { DummyElasticSearchModel.create!(my_string: "Hello") }.to raise_error(ElasticsearchModels::Base::CreateError, expected_error)
       end
@@ -424,6 +428,24 @@ RSpec.describe ElasticsearchModels::Base do
           end
         end
       end
+
+
+      context "new and save" do
+        it "supports calling new and then saving later" do
+          dummy_model = DummyElasticSearchModel.new(my_string: "Hello")
+
+          # Not saved yet
+          refresh_index
+          search_response = @elasticsearch_test_client.search(index: DummyElasticSearchModel.index_name)
+          expect(search_response.dig("hits", "total")).to eq(0)
+
+          dummy_model.save!
+          search_hit = refresh_and_find_search_hit
+          expect(search_hit["_index"]).to eq(dummy_model.index_name)
+          expect(search_hit["_source"]["rehydration_class"]).to eq(dummy_model.type)
+        end
+      end
+
 
       it "inserts to Elasticsearch based on index_name and type with non-nil attributes as the source" do
         current_time            = Time.now

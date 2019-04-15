@@ -20,19 +20,28 @@ module ElasticsearchModels
     attribute          :rehydration_class, :string
     aggregate_has_many :query_types, :string
 
+    def save!
+      self.class.save_model!(self)
+    end
+
     class << self
       def create!(*params)
-        model = new(*params)
+        new(*params).save!
+      end
+
+      def save_model!(model)
         model.rehydration_class = type
         model.query_types       = query_types
         model.validate!
-        response = client_connection.index(index: model.index_name, type: DEPRECATED_TYPE, body: model.deep_squash_to_store)
+
+        request_body = model.deep_squash_to_store
+        response     = client_connection.index(index: model.index_name, type: DEPRECATED_TYPE, body: model.deep_squash_to_store)
 
         if response.dig("_shards", "successful").to_i > 0
           model.assign_metadata_fields(response)
           model
         else
-          raise CreateError, "Error creating elasticsearch model. Params: #{params.inspect}. Response: #{response.inspect}"
+          raise CreateError, "Error creating elasticsearch model. Params: #{request_body}. Response: #{response.inspect}"
         end
       end
 
