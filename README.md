@@ -33,6 +33,7 @@ For complete example usage, see [the spec for ElasticsearchModels::Base]("https:
 Note: `rehydration_class` and `query_types` are fields used internally in `ElasticsearchModels::Base` so they should not be changed.
 
 ### Creating a model
+_create!_ will build and validate a model and then insert the model into Elasticsearch:
 ```ruby
 class DummyElasticSearchModel < ElasticsearchModels::Base
   class NestedClass < ElasticsearchModels::Aggregate
@@ -61,6 +62,36 @@ end
 
 ```ruby
   DummyElasticSearchModel.create!(my_string: "Hi", my_nested_class: DummyElasticSearchModel::NestedClass.new(nested_int_field: 5, nested_hash_field: { "a" => 1, "b" => 2 }))
+```
+
+### Building a model (without inserting)
+Building a model will do everything creating would but not insert the model into Elasticsearch
+```ruby
+model = DummyElasticSearchModel.build!(my_string: "Hi")
+```
+
+### Inserting a model
+_insert!_ allows the ability to insert a model hash to Elasticsearch.
+
+_insert!_ will raise an exception if the first argument passed in is not a Hash
+
+On success, _insert!_ will return the response Elasticsearch gives.
+
+On failure, _insert!_ will raise a _ElasticsearchModels::Base::CreateError_ exception.
+```ruby
+
+model = DummyElasticSearchModel.build!(my_string: "Hi")
+
+# Success
+response = DummyElasticSearchModel.insert!(model.deep_squash_to_store, model.index_name)
+
+# Elasticsearch Failure
+DummyElasticSearchModel.insert!(model.deep_squash_to_store, model.index_name)
+=> raises ElasticsearchModels::Base::CreateError
+
+# Non-Hash value passed in for first argument"" 
+DummyElasticSearchModel.insert!("abc", model.index_name)
+=> raises RuntimeError
 ```
 
 ### Querying for a model
