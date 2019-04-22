@@ -503,6 +503,64 @@ RSpec.describe ElasticsearchModels::Base do
       end
     end
 
+    context ".build!" do
+      it "instantiates a model but does not insert it to Elasticsearch" do
+        dummy_model = DummyElasticSearchModel.build!(my_string: "Hello")
+        refresh_index
+        query_response = DummyElasticSearchModel.where(my_string: "Hello")
+
+        expect(query_response.models.count).to eq(0)
+        expect(dummy_model.my_string).to eq("Hello")
+      end
+
+      it "validates fields on the model" do
+        expect { DummyElasticSearchModel.build! }.to raise_error(ActiveRecord::RecordInvalid, "Validation failed: My string must be set")
+      end
+    end
+
+    context ".insert!" do
+      before(:each) do
+        @default_fields = { "my_string" => "Hello", "my_bool" => false,
+                            "data_schema_version" => "1.0",
+                            "rehydration_class"   => "DummyElasticSearchModel",
+                            "query_types"         => ["DummyElasticSearchModel"] }
+      end
+
+      it "takes a squashed model_hash and index and inserts it as a document into Elasticsearch and returns a response" do
+        dummy_model = DummyElasticSearchModel.build!(my_string: "Hello")
+        expect(DummyElasticSearchModel.where.models.count).to eq(0)
+
+        response = DummyElasticSearchModel.insert!(dummy_model.deep_squash_to_store,
+                                                   dummy_model.index_name)
+        refresh_index
+        expect(DummyElasticSearchModel.where.models.count).to eq(1)
+        expect(response.dig("_shards", "successful")).to eq(1)
+      end
+
+      it "raises an exception if the insert fails" do
+        dummy_connection = Elasticsearch::Client.new
+        dummy_model = DummyElasticSearchModel.build!(my_string: "Hello")
+        expect(DummyElasticSearchModel).to receive(:client_connection).and_return(dummy_connection)
+
+        error_response = { "_shards" => { "total" => 2, "successful" => 0, "failed" => 1 } }
+        expect(dummy_connection).to receive(:index).and_return(error_response)
+
+        expected_error = "Error creating elasticsearch model. Body: {\"rehydration_class\"=>\"DummyElasticSearchModel\", "\
+                         "\"query_types\"=>[\"DummyElasticSearchModel\"], \"my_string\"=>\"Hello\", \"my_bool\"=>false, "\
+                         "\"data_schema_version\"=>\"1.0\"}. Response: {\"_shards\"=>{\"total\"=>2, \"successful\"=>0, \"failed\"=>1}}"
+        expect { DummyElasticSearchModel.insert!(dummy_model.deep_squash_to_store, dummy_model.index_name) }
+            .to raise_error(ElasticsearchModels::Base::CreateError, expected_error)
+      end
+
+      it "raises an exception if a hash is not passed in as the first argument" do
+        dummy_model = DummyElasticSearchModel.build!(my_string: "Hello")
+        expect(dummy_model.class).to_not eq(Hash)
+
+        expect { DummyElasticSearchModel.insert!(dummy_model, dummy_model.index_name) }
+            .to raise_error(ArgumentError, "body_hash must be of type Hash, was of type DummyElasticSearchModel.")
+      end
+    end
+
     context ".where" do
       it "filters by index and type" do
         dummy_model1 = DummyElasticSearchModel.create!(my_string: "Hello")

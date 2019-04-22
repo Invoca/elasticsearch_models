@@ -29,13 +29,27 @@ module ElasticsearchModels
         new(*params).save!
       end
 
+      def build!(*params)
+        model = new(*params)
+        model.rehydration_class = type
+        model.query_types       = query_types
+        model.validate!
+        model
+      end
+
       def save_model!(model)
         model.rehydration_class = type
         model.query_types       = query_types
         model.validate!
 
-        request_body = model.deep_squash_to_store
-        response     = client_connection.index(index: model.index_name, type: DEPRECATED_TYPE, body: model.deep_squash_to_store)
+        response = insert!(model.deep_squash_to_store, model.index_name)
+        model.assign_metadata_fields(response)
+        model
+      end
+
+      def insert!(body_hash, index)
+        body_hash.is_a?(Hash) or raise ArgumentError, "body_hash must be of type Hash, was of type #{body_hash.class}."
+        response = client_connection.index(index: index, type: DEPRECATED_TYPE, body: body_hash)
         if response.dig("_shards", "successful").to_i > 0
           response
         else
