@@ -36,12 +36,10 @@ module ElasticsearchModels
 
         request_body = model.deep_squash_to_store
         response     = client_connection.index(index: model.index_name, type: DEPRECATED_TYPE, body: model.deep_squash_to_store)
-
         if response.dig("_shards", "successful").to_i > 0
-          model.assign_metadata_fields(response)
-          model
+          response
         else
-          raise CreateError, "Error creating elasticsearch model. Params: #{request_body}. Response: #{response.inspect}"
+          raise CreateError, "Error creating elasticsearch model. Body: #{body_hash.inspect}. Response: #{response.inspect}"
         end
       end
 

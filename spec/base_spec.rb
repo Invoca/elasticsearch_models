@@ -268,10 +268,9 @@ RSpec.describe ElasticsearchModels::Base do
         }
         expect(dummy_connection).to receive(:index).and_return(error_response)
 
-        expected_error = "Error creating elasticsearch model. Params: {\"rehydration_class\"=>\"DummyElasticSearchModel\", "\
-                         "\"query_types\"=>[\"DummyElasticSearchModel\"],"\
-                         " \"my_string\"=>\"Hello\", \"my_bool\"=>false, \"data_schema_version\"=>\"1.0\"}. Response: "\
-                         "{\"_shards\"=>{\"total\"=>2, \"successful\"=>0, \"failed\"=>1}}"
+        expected_error = "Error creating elasticsearch model. Body: {\"rehydration_class\"=>\"DummyElasticSearchModel\", "\
+                         "\"query_types\"=>[\"DummyElasticSearchModel\"], \"my_string\"=>\"Hello\", \"my_bool\"=>false, "\
+                         "\"data_schema_version\"=>\"1.0\"}. Response: {\"_shards\"=>{\"total\"=>2, \"successful\"=>0, \"failed\"=>1}}"
         expect { DummyElasticSearchModel.create!(my_string: "Hello") }.to raise_error(ElasticsearchModels::Base::CreateError, expected_error)
       end
 
