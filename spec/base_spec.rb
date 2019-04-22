@@ -274,7 +274,8 @@ RSpec.describe ElasticsearchModels::Base do
         expect { DummyElasticSearchModel.create!(my_string: "Hello") }.to raise_error(ElasticsearchModels::Base::CreateError, expected_error)
       end
 
-      ElasticsearchModels::Base::METADATA_FIELDS.each do |metadata_field|
+      # _id is tested separately and gives an cannot save twice error.  (Tested with save!)
+      (ElasticsearchModels::Base::METADATA_FIELDS - [:_id]).each do |metadata_field|
         it "raises error when attempting to set metadata field '#{metadata_field}' on model" do
           expected_error = /Field \[#{metadata_field}\] is a metadata field and cannot be added inside a document/
           expect do
@@ -439,6 +440,12 @@ RSpec.describe ElasticsearchModels::Base do
           search_hit = refresh_and_find_search_hit
           expect(search_hit["_index"]).to eq(dummy_model.index_name)
           expect(search_hit["_source"]["rehydration_class"]).to eq(dummy_model.type)
+        end
+
+        it "does not allow save to be called on a model that has already been updated" do
+          dummy_model = DummyElasticSearchModel.create!(my_string: "Hello")
+
+          expect { dummy_model.save! }.to raise_error(RuntimeError, "Model already saved, cannot be saved again")
         end
       end
 

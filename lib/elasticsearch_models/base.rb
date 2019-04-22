@@ -38,6 +38,7 @@ module ElasticsearchModels
       end
 
       def save_model!(model)
+        model._id.nil? or raise "Model already saved, cannot be saved again"
         model.rehydration_class = type
         model.query_types       = query_types
         model.validate!
