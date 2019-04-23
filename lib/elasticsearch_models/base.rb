@@ -24,23 +24,25 @@ module ElasticsearchModels
       self.class.save_model!(self)
     end
 
+    def new_record?
+      _id.nil?
+    end
+
+    def initialize(*params)
+      super
+      if params.last.is_a?(Hash) # Constructed new, not rehydrated
+        self.rehydration_class = self.class.type
+        self.query_types       = self.class.query_types
+      end
+    end
+
     class << self
       def create!(*params)
         new(*params).save!
       end
 
-      def build!(*params)
-        model = new(*params)
-        model.rehydration_class = type
-        model.query_types       = query_types
-        model.validate!
-        model
-      end
-
       def save_model!(model)
         model._id.nil? or raise "Model already saved, cannot be saved again"
-        model.rehydration_class = type
-        model.query_types       = query_types
         model.validate!
 
         response = insert!(model.deep_squash_to_store, model.index_name)

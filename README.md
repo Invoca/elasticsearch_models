@@ -64,11 +64,15 @@ end
   DummyElasticSearchModel.create!(my_string: "Hi", my_nested_class: DummyElasticSearchModel::NestedClass.new(nested_int_field: 5, nested_hash_field: { "a" => 1, "b" => 2 }))
 ```
 
-### Building a model (without inserting)
-Building a model will do everything creating would but not insert the model into Elasticsearch
+### Newing a model (without inserting)
+Just like active record, creating a new model will not save it to the database, but you can call save on the model to write it.
+
 ```ruby
-model = DummyElasticSearchModel.build!(my_string: "Hi")
+model = DummyElasticSearchModel.new(my_string: "Hi")
+model.save!
 ```
+
+Unlike active record, you cannot update an existing model.  
 
 ### Inserting a model
 _insert!_ allows the ability to insert a model hash to Elasticsearch.
@@ -80,7 +84,8 @@ On success, _insert!_ will return the response Elasticsearch gives.
 On failure, _insert!_ will raise a _ElasticsearchModels::Base::CreateError_ exception.
 ```ruby
 
-model = DummyElasticSearchModel.build!(my_string: "Hi")
+model = DummyElasticSearchModel.new(my_string: "Hi")
+model.validate!
 
 # Success
 response = DummyElasticSearchModel.insert!(model.deep_squash_to_store, model.index_name)
