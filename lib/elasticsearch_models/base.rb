@@ -21,10 +21,13 @@ module ElasticsearchModels
     aggregate_has_many :query_types, :string
 
     def save!
-      _id.nil? or raise "Model already saved, cannot be saved again"
+      new_record? or raise "Model already saved, cannot be saved again"
       validate!
 
-      assign_metadata_fields(self.class.insert!(deep_squash_to_store, index_name))
+      if (result = self.class.insert!(deep_squash_to_store, index_name))
+        assign_metadata_fields(result)
+      end
+
       self
     end
 

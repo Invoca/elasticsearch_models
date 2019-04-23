@@ -453,6 +453,12 @@ RSpec.describe ElasticsearchModels::Base do
           dummy_model = DummyElasticSearchModel.where.models.first
           expect { dummy_model.save! }.to raise_error(RuntimeError, "Model already saved, cannot be saved again")
         end
+
+        it "can handle an empty result from insert!" do
+          dummy_model = DummyElasticSearchModel.new(my_string: "Hello")
+          expect(DummyElasticSearchModel).to receive(:insert!).with(any_args).and_return(nil)
+          dummy_model.save!
+        end
       end
 
       context "new_record?" do
