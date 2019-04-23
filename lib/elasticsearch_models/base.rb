@@ -21,7 +21,11 @@ module ElasticsearchModels
     aggregate_has_many :query_types, :string
 
     def save!
-      self.class.save_model!(self)
+      _id.nil? or raise "Model already saved, cannot be saved again"
+      validate!
+
+      assign_metadata_fields(self.class.insert!(deep_squash_to_store, index_name))
+      self
     end
 
     def new_record?
@@ -39,15 +43,6 @@ module ElasticsearchModels
     class << self
       def create!(*params)
         new(*params).save!
-      end
-
-      def save_model!(model)
-        model._id.nil? or raise "Model already saved, cannot be saved again"
-        model.validate!
-
-        response = insert!(model.deep_squash_to_store, model.index_name)
-        model.assign_metadata_fields(response)
-        model
       end
 
       def insert!(body_hash, index)
