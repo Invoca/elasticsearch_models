@@ -74,6 +74,10 @@ model.save!
 
 Unlike active record, you cannot update an existing model.  
 
+#### `#new_record?`
+
+`model.new_record?` can be used to determine if a model can be saved or not.
+
 ### Inserting a model
 _insert!_ allows the ability to insert a model hash to Elasticsearch.
 
