@@ -457,7 +457,7 @@ RSpec.describe ElasticsearchModels::Base do
         it "can handle an empty result from insert!" do
           dummy_model = DummyElasticSearchModel.new(my_string: "Hello")
           expect(DummyElasticSearchModel).to receive(:insert!).with(any_args).and_return(nil)
-          dummy_model.save!
+          expect(dummy_model.save!).to eq(nil)
         end
       end
 

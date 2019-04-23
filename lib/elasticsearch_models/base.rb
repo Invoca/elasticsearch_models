@@ -26,9 +26,8 @@ module ElasticsearchModels
 
       if (result = self.class.insert!(deep_squash_to_store, index_name))
         assign_metadata_fields(result)
+        self
       end
-
-      self
     end
 
     def new_record?
