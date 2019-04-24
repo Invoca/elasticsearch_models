@@ -86,7 +86,6 @@ RSpec.describe ElasticsearchModels::Base do
         self.my_other_string = my_string
       end
     end
-
   end
 
   class DummySub1AModel < DummyElasticSearchModel
@@ -274,7 +273,8 @@ RSpec.describe ElasticsearchModels::Base do
         expect { DummyElasticSearchModel.create!(my_string: "Hello") }.to raise_error(ElasticsearchModels::Base::CreateError, expected_error)
       end
 
-      ElasticsearchModels::Base::METADATA_FIELDS.each do |metadata_field|
+      # _id is tested separately and gives an cannot save twice error.  (Tested with save!)
+      (ElasticsearchModels::Base::METADATA_FIELDS - [:_id]).each do |metadata_field|
         it "raises error when attempting to set metadata field '#{metadata_field}' on model" do
           expected_error = /Field \[#{metadata_field}\] is a metadata field and cannot be added inside a document/
           expect do
@@ -426,6 +426,60 @@ RSpec.describe ElasticsearchModels::Base do
         end
       end
 
+      context "new and save" do
+        it "supports calling new and then saving later" do
+          dummy_model = DummyElasticSearchModel.new(my_string: "Hello")
+
+          # Not saved yet
+          refresh_index
+          search_response = @elasticsearch_test_client.search(index: DummyElasticSearchModel.index_name)
+          expect(search_response.dig("hits", "total")).to eq(0)
+
+          dummy_model.save!
+          search_hit = refresh_and_find_search_hit
+          expect(search_hit["_index"]).to eq(dummy_model.index_name)
+          expect(search_hit["_source"]["rehydration_class"]).to eq(dummy_model.type)
+        end
+
+        it "does not allow save to be called on a model that has already been updated" do
+          dummy_model = DummyElasticSearchModel.create!(my_string: "Hello")
+
+          expect { dummy_model.save! }.to raise_error(RuntimeError, "Model already saved, cannot be saved again")
+        end
+
+        it "does not allow save to be called on a model that has already been loaded" do
+          DummyElasticSearchModel.create!(my_string: "Hello")
+          refresh_index
+          dummy_model = DummyElasticSearchModel.where.models.first
+          expect { dummy_model.save! }.to raise_error(RuntimeError, "Model already saved, cannot be saved again")
+        end
+
+        it "can handle an empty result from insert!" do
+          dummy_model = DummyElasticSearchModel.new(my_string: "Hello")
+          expect(DummyElasticSearchModel).to receive(:insert!).with(any_args).and_return(nil)
+          expect(dummy_model.save!).to eq(nil)
+        end
+      end
+
+      context "new_record?" do
+        it "is true for a new record" do
+          dummy_model = DummyElasticSearchModel.new(my_string: "Hello")
+          expect(dummy_model.new_record?).to eq(true)
+        end
+
+        it "is false for a record after it has been saved" do
+          dummy_model = DummyElasticSearchModel.create!(my_string: "Hello")
+          expect(dummy_model.new_record?).to eq(false)
+        end
+
+        it "is false for a record after it has been loaded from Elastisearch" do
+          DummyElasticSearchModel.create!(my_string: "Hello")
+          refresh_index
+          dummy_model = DummyElasticSearchModel.where.models.first
+          expect(dummy_model.new_record?).to eq(false)
+        end
+      end
+
       it "inserts to Elasticsearch based on index_name and type with non-nil attributes as the source" do
         current_time            = Time.now
         nested_bool             = DummyElasticSearchModel::NestedAggregateAttribute::NestedBoolAttribute.new(nested_bool: true)
@@ -487,21 +541,6 @@ RSpec.describe ElasticsearchModels::Base do
       end
     end
 
-    context ".build!" do
-      it "instantiates a model but does not insert it to Elasticsearch" do
-        dummy_model = DummyElasticSearchModel.build!(my_string: "Hello")
-        refresh_index
-        query_response = DummyElasticSearchModel.where(my_string: "Hello")
-
-        expect(query_response.models.count).to eq(0)
-        expect(dummy_model.my_string).to eq("Hello")
-      end
-
-      it "validates fields on the model" do
-        expect { DummyElasticSearchModel.build! }.to raise_error(ActiveRecord::RecordInvalid, "Validation failed: My string must be set")
-      end
-    end
-
     context ".insert!" do
       before(:each) do
         @default_fields = { "my_string" => "Hello", "my_bool" => false,
@@ -511,7 +550,8 @@ RSpec.describe ElasticsearchModels::Base do
       end
 
       it "takes a squashed model_hash and index and inserts it as a document into Elasticsearch and returns a response" do
-        dummy_model = DummyElasticSearchModel.build!(my_string: "Hello")
+        dummy_model = DummyElasticSearchModel.new(my_string: "Hello")
+
         expect(DummyElasticSearchModel.where.models.count).to eq(0)
 
         response = DummyElasticSearchModel.insert!(dummy_model.deep_squash_to_store,
@@ -523,7 +563,8 @@ RSpec.describe ElasticsearchModels::Base do
 
       it "raises an exception if the insert fails" do
         dummy_connection = Elasticsearch::Client.new
-        dummy_model = DummyElasticSearchModel.build!(my_string: "Hello")
+        dummy_model = DummyElasticSearchModel.new(my_string: "Hello")
+
         expect(DummyElasticSearchModel).to receive(:client_connection).and_return(dummy_connection)
 
         error_response = { "_shards" => { "total" => 2, "successful" => 0, "failed" => 1 } }
@@ -537,7 +578,7 @@ RSpec.describe ElasticsearchModels::Base do
       end
 
       it "raises an exception if a hash is not passed in as the first argument" do
-        dummy_model = DummyElasticSearchModel.build!(my_string: "Hello")
+        dummy_model = DummyElasticSearchModel.new(my_string: "Hello")
         expect(dummy_model.class).to_not eq(Hash)
 
         expect { DummyElasticSearchModel.insert!(dummy_model, dummy_model.index_name) }
@@ -589,6 +630,14 @@ RSpec.describe ElasticsearchModels::Base do
         refresh_index
         queried_model = DummyElasticSearchModel.where.models.first
         expect(queried_model.my_other_string).to eq("Hello")
+      end
+
+      it "does not update the schema version if the model was saved at the correct version" do
+        DummyElasticSearchModel.create!(my_string: "Hello")
+
+        expect_any_instance_of(DummyElasticSearchModel).to_not receive(:fixup_schema)
+        refresh_index
+        expect(DummyElasticSearchModel.where.models.first.my_string).to eq("Hello")
       end
 
       it "allows class names to be swapped during rehydration" do

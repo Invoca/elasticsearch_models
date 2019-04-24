@@ -20,20 +20,31 @@ module ElasticsearchModels
     attribute          :rehydration_class, :string
     aggregate_has_many :query_types, :string
 
+    def save!
+      new_record? or raise "Model already saved, cannot be saved again"
+      validate!
+
+      if (result = self.class.insert!(deep_squash_to_store, index_name))
+        assign_metadata_fields(result)
+        self
+      end
+    end
+
+    def new_record?
+      _id.nil?
+    end
+
+    def initialize(*params)
+      super
+      if params.last.is_a?(Hash) # Constructed new, not rehydrated
+        self.rehydration_class = self.class.type
+        self.query_types       = self.class.query_types
+      end
+    end
+
     class << self
       def create!(*params)
-        model    = build!(*params)
-        response = insert!(model.deep_squash_to_store, model.index_name)
-        model.assign_metadata_fields(response)
-        model
-      end
-
-      def build!(*params)
-        model = new(*params)
-        model.rehydration_class = type
-        model.query_types       = query_types
-        model.validate!
-        model
+        new(*params).save!
       end
 
       def insert!(body_hash, index)
