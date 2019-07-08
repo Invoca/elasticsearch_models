@@ -139,7 +139,7 @@ RSpec.describe ElasticsearchModels::Base do
           "my_string"                => "Hello",
           "my_other_string"          => nil,
           "my_bool"                  => false,
-          "my_hash"                  => { "a" => [] },
+          "my_hash"                  => "{\"a\":[]}",
           "my_int"                   => nil,
           "my_time"                  => nil,
           "my_float"                 => nil,
@@ -157,6 +157,7 @@ RSpec.describe ElasticsearchModels::Base do
         expected_deep_squash_to_store = {
           "my_string"           => "Hello",
           "my_bool"             => false,
+          "my_hash"             => "{\"a\":[]}",
           "data_schema_version" => "1.0",
           "rehydration_class"   => "DummyElasticSearchModel",
           "query_types"         => ["DummyElasticSearchModel"]
@@ -229,6 +230,7 @@ RSpec.describe ElasticsearchModels::Base do
       before(:each) do
         @default_fields = { "my_string" => "Hello", "my_bool" => false,
                             "data_schema_version" => "1.0",
+                            "my_hash"             => "{}",
                             "rehydration_class"   => "DummyElasticSearchModel",
                             "query_types"         => ["DummyElasticSearchModel"] }
       end
@@ -268,7 +270,7 @@ RSpec.describe ElasticsearchModels::Base do
         expect(dummy_connection).to receive(:index).and_return(error_response)
 
         expected_error = "Error creating elasticsearch model. Body: {\"rehydration_class\"=>\"DummyElasticSearchModel\", "\
-                         "\"query_types\"=>[\"DummyElasticSearchModel\"], \"my_string\"=>\"Hello\", \"my_bool\"=>false, "\
+                         "\"query_types\"=>[\"DummyElasticSearchModel\"], \"my_string\"=>\"Hello\", \"my_bool\"=>false, \"my_hash\"=>\"{}\", "\
                          "\"data_schema_version\"=>\"1.0\"}. Response: {\"_shards\"=>{\"total\"=>2, \"successful\"=>0, \"failed\"=>1}}"
         expect { DummyElasticSearchModel.create!(my_string: "Hello") }.to raise_error(ElasticsearchModels::Base::CreateError, expected_error)
       end
@@ -309,7 +311,7 @@ RSpec.describe ElasticsearchModels::Base do
 
         it "stores hash" do
           DummyElasticSearchModel.create!(my_string: "Hello", my_hash: { a: { b: 1 } })
-          expect(refresh_and_find_search_hit["_source"]).to eq(@default_fields.merge("my_hash" => { "a" => { "b" => 1 } }))
+          expect(refresh_and_find_search_hit["_source"]).to eq(@default_fields.merge("my_hash" => "{\"a\":{\"b\":1}}"))
         end
 
         it "stores int" do
@@ -352,9 +354,7 @@ RSpec.describe ElasticsearchModels::Base do
               "my_nested_class" => {
                 "nested_string_field" => "Hi",
                 "nested_int_field"    => 100,
-                "nested_hash_field"   => {
-                  "a" => 1
-                },
+                "nested_hash_field"   => "{\"a\":1}",
                 "nested_bool_class" => {
                   "nested_bool" => true
                 }
@@ -369,7 +369,8 @@ RSpec.describe ElasticsearchModels::Base do
 
             expected_additional_fields = {
               "my_nested_class" => {
-                "nested_int_field" => 100
+                "nested_hash_field" => "{}",
+                "nested_int_field"  => 100
               }
             }
             expect(refresh_and_find_search_hit["_source"]).to eq(@default_fields.merge(expected_additional_fields))
@@ -392,9 +393,7 @@ RSpec.describe ElasticsearchModels::Base do
                 {
                   "nested_string_field" => "Hi",
                   "nested_int_field"    => 100,
-                  "nested_hash_field"   => {
-                    "a" => 1
-                  },
+                  "nested_hash_field"   => "{\"a\":1}",
                   "nested_bool_class" => {
                     "nested_bool" => true
                   }
@@ -408,7 +407,7 @@ RSpec.describe ElasticsearchModels::Base do
             nested_attr = DummyElasticSearchModel::NestedAggregateAttribute.new(nested_int_field: 100)
             DummyElasticSearchModel.create!(my_string: "Hello", nested_aggregate_classes: [nested_attr] * 2)
 
-            expected_additional_fields = { "nested_aggregate_classes" => [{ "nested_int_field" => 100 }] * 2 }
+            expected_additional_fields = { "nested_aggregate_classes" => [{ "nested_hash_field" => "{}", "nested_int_field" => 100 }] * 2 }
             expect(refresh_and_find_search_hit["_source"]).to eq(@default_fields.merge(expected_additional_fields))
           end
         end
@@ -497,23 +496,17 @@ RSpec.describe ElasticsearchModels::Base do
                                         my_nested_class:          nested_attr_with_int,
                                         nested_aggregate_classes: [nested_attr_with_int, nested_attr_with_string])
         expected_search_hit_body = {
-          "rehydration_class"  => "DummyElasticSearchModel",
-          "query_types"        => ["DummyElasticSearchModel"],
-          "my_string" => "Hello",
-          "my_bool"   => true,
-          "my_hash"   => {
-            "first_layer" => {
-              "nested_layer" => 1
-            }
-          },
-          "my_time"         => current_time.utc.iso8601,
-          "my_float"        => 1.1,
-          "my_enum"         => "Yes",
+          "rehydration_class" => "DummyElasticSearchModel",
+          "query_types"       => ["DummyElasticSearchModel"],
+          "my_string"         => "Hello",
+          "my_bool"           => true,
+          "my_hash"           => "{\"first_layer\":{\"nested_layer\":1}}",
+          "my_time"           => current_time.utc.iso8601,
+          "my_float"          => 1.1,
+          "my_enum"           => "Yes",
           "my_nested_class" => {
-            "nested_int_field" => 100,
-            "nested_hash_field" => {
-              "a" => 1
-            },
+            "nested_int_field"  => 100,
+            "nested_hash_field" => "{\"a\":1}",
             "nested_bool_class" => {
               "nested_bool" => true
             }
@@ -522,15 +515,14 @@ RSpec.describe ElasticsearchModels::Base do
           "nested_aggregate_classes" => [
             {
               "nested_int_field" => 100,
-              "nested_hash_field" => {
-                "a" => 1
-              },
+              "nested_hash_field" => "{\"a\":1}",
               "nested_bool_class" => {
                 "nested_bool" => true
               }
             },
             {
               "nested_string_field" => "nested",
+              "nested_hash_field" => "{}",
               "nested_bool_class" => {
                 "nested_bool" => true
               }
@@ -571,7 +563,7 @@ RSpec.describe ElasticsearchModels::Base do
         expect(dummy_connection).to receive(:index).and_return(error_response)
 
         expected_error = "Error creating elasticsearch model. Body: {\"rehydration_class\"=>\"DummyElasticSearchModel\", "\
-                         "\"query_types\"=>[\"DummyElasticSearchModel\"], \"my_string\"=>\"Hello\", \"my_bool\"=>false, "\
+                         "\"query_types\"=>[\"DummyElasticSearchModel\"], \"my_string\"=>\"Hello\", \"my_bool\"=>false, \"my_hash\"=>\"{}\", "\
                          "\"data_schema_version\"=>\"1.0\"}. Response: {\"_shards\"=>{\"total\"=>2, \"successful\"=>0, \"failed\"=>1}}"
         expect { DummyElasticSearchModel.insert!(dummy_model.deep_squash_to_store, dummy_model.index_name) }
           .to raise_error(ElasticsearchModels::Base::CreateError, expected_error)
@@ -756,11 +748,15 @@ RSpec.describe ElasticsearchModels::Base do
           end
 
           it "sorts by a nested field" do
-            dummy_model1 = DummyElasticSearchModel.create!(my_string: "Goodbye", my_hash: { a: 1 })
-            dummy_model2 = DummyElasticSearchModel.create!(my_string: "Goodbye", my_hash: { a: 2 })
+            shared_fields = { nested_string_field: "Hi", nested_hash_field: { a: 1 } }
+            nested_attr1 = DummyElasticSearchModel::NestedAggregateAttribute.new(shared_fields.merge(nested_int_field: 100))
+            nested_attr2 = DummyElasticSearchModel::NestedAggregateAttribute.new(shared_fields.merge(nested_int_field: 200))
+
+            dummy_model1 = DummyElasticSearchModel.create!(my_string: "Goodbye", my_nested_class: nested_attr1)
+            dummy_model2 = DummyElasticSearchModel.create!(my_string: "Goodbye", my_nested_class: nested_attr2)
             refresh_index
 
-            query_response = DummyElasticSearchModel.where(my_string: "Goodbye", _sort_by: { "my_hash.a" => :desc })
+            query_response = DummyElasticSearchModel.where(my_string: "Goodbye", _sort_by: { "my_nested_class.nested_int_field" => :desc })
             expect(query_response.models.count).to eq(2)
             expect(query_response.models.map(&:to_store)).to eq([dummy_model2, dummy_model1].map(&:to_store).map(&:deep_stringify_keys))
           end
@@ -954,17 +950,17 @@ RSpec.describe ElasticsearchModels::Base do
           expect(query_response.models.first.to_store).to eq(dummy_model.to_store)
         end
 
-        it "filters by matching hash" do
-          # This is assuming the hash has the option `store_hash_as_json: false`
-          # Note: returned hashes will have stringified keys regardless of the input format
-          dummy_model = DummyElasticSearchModel.create!(my_string: "Hello", my_hash: { a: { b: 1, c: 1 } })
-          DummyElasticSearchModel.create!(my_string: "Hello", my_hash: { a: { b: 1, c: 2 } })
-          refresh_index
+        # it "filters by matching hash" do
+        #   # This is assuming the hash has the option `store_hash_as_json: false`
+        #   # Note: returned hashes will have stringified keys regardless of the input format
+        #   dummy_model = DummyElasticSearchModel.create!(my_string: "Hello", my_hash: { a: { b: 1, c: 1 } })
+        #   DummyElasticSearchModel.create!(my_string: "Hello", my_hash: { a: { b: 1, c: 2 } })
+        #   refresh_index
 
-          query_response = DummyElasticSearchModel.where(my_hash: { a: { b: 1, c: 1 } })
-          expect(query_response.models.count).to eq(1)
-          expect(query_response.models.first.to_store).to eq(dummy_model.to_store.deep_stringify_keys)
-        end
+        #   query_response = DummyElasticSearchModel.where(my_hash: { a: { b: 1, c: 1 } })
+        #   expect(query_response.models.count).to eq(1)
+        #   expect(query_response.models.first.to_store).to eq(dummy_model.to_store.deep_stringify_keys)
+        # end
 
         it "filters by matching nested class" do
           nested_bool_true  = DummyElasticSearchModel::NestedAggregateAttribute::NestedBoolAttribute.new(nested_bool: true)
@@ -978,7 +974,10 @@ RSpec.describe ElasticsearchModels::Base do
           DummyElasticSearchModel.create!(my_string: "Hello", my_nested_class: nested_attr2)
           refresh_index
 
-          query_response = DummyElasticSearchModel.where(my_nested_class: shared_fields.merge(nested_bool_class: { nested_bool: true }))
+          # Querying keys in JSON hashes is not supported
+          where_params = shared_fields.merge(nested_bool_class: { nested_bool: true }) - [:nested_hash_field]
+
+          query_response = DummyElasticSearchModel.where(my_nested_class: where_params)
           expect(query_response.models.count).to eq(1)
           expect(query_response.models.first.to_store).to eq(dummy_model.to_store.deep_stringify_keys)
         end
@@ -1089,31 +1088,31 @@ RSpec.describe ElasticsearchModels::Base do
           expect(query_response3.models.count).to eq(0)
         end
 
-        it "filters by nested hash int range" do
-          # This is assuming the hash has the option `store_hash_as_json: false`
-          dummy_model = DummyElasticSearchModel.create!(my_string: "Hello", my_hash: { a: { b: 1, c: 5 } })
-          DummyElasticSearchModel.create!(my_string: "Hello", my_hash: { a: { b: 1, c: 1 } })
-          DummyElasticSearchModel.create!(my_string: "Hello", my_hash: { a: { b: 1, c: 10 } })
-          DummyElasticSearchModel.create!(my_string: "Hello")
-          refresh_index
+        # it "filters by nested hash int range" do
+        #   # This is assuming the hash has the option `store_hash_as_json: false`
+        #   dummy_model = DummyElasticSearchModel.create!(my_string: "Hello", my_hash: { a: { b: 1, c: 5 } })
+        #   DummyElasticSearchModel.create!(my_string: "Hello", my_hash: { a: { b: 1, c: 1 } })
+        #   DummyElasticSearchModel.create!(my_string: "Hello", my_hash: { a: { b: 1, c: 10 } })
+        #   DummyElasticSearchModel.create!(my_string: "Hello")
+        #   refresh_index
 
-          query_response1 = DummyElasticSearchModel.where(my_hash: { a: { b: 1, c: Range.new(4, 6) } })
-          expect(query_response1.models.count).to eq(1)
-          expect(query_response1.models.first.to_store).to eq(dummy_model.to_store.deep_stringify_keys)
+        #   query_response1 = DummyElasticSearchModel.where(my_hash: { a: { b: 1, c: Range.new(4, 6) } })
+        #   expect(query_response1.models.count).to eq(1)
+        #   expect(query_response1.models.first.to_store).to eq(dummy_model.to_store.deep_stringify_keys)
 
-          query_response2 = DummyElasticSearchModel.where(my_hash: { a: { b: 1, c: Range.new(5, 5) } })
-          expect(query_response2.models.count).to eq(1)
-          expect(query_response2.models.first.to_store).to eq(dummy_model.to_store.deep_stringify_keys)
+        #   query_response2 = DummyElasticSearchModel.where(my_hash: { a: { b: 1, c: Range.new(5, 5) } })
+        #   expect(query_response2.models.count).to eq(1)
+        #   expect(query_response2.models.first.to_store).to eq(dummy_model.to_store.deep_stringify_keys)
 
-          query_response3 = DummyElasticSearchModel.where(my_hash: { a: { b: 1, c: Range.new(6, 4) } })
-          expect(query_response3.models.count).to eq(0)
-        end
+        #   query_response3 = DummyElasticSearchModel.where(my_hash: { a: { b: 1, c: Range.new(6, 4) } })
+        #   expect(query_response3.models.count).to eq(0)
+        # end
 
         it "filters by nested class int range" do
-          shared_fields = { nested_int_field: 100, nested_string_field: "Hi" }
-          nested_attr1 = DummyElasticSearchModel::NestedAggregateAttribute.new(shared_fields.merge(nested_hash_field: { a: 5 }))
-          nested_attr2 = DummyElasticSearchModel::NestedAggregateAttribute.new(shared_fields.merge(nested_hash_field: { a: 1 }))
-          nested_attr3 = DummyElasticSearchModel::NestedAggregateAttribute.new(shared_fields.merge(nested_hash_field: { a: 10 }))
+          shared_fields = { nested_string_field: "Hi" }
+          nested_attr1 = DummyElasticSearchModel::NestedAggregateAttribute.new(shared_fields.merge(nested_int_field: 5))
+          nested_attr2 = DummyElasticSearchModel::NestedAggregateAttribute.new(shared_fields.merge(nested_int_field: 1))
+          nested_attr3 = DummyElasticSearchModel::NestedAggregateAttribute.new(shared_fields.merge(nested_int_field: 10))
           nested_attr4 = DummyElasticSearchModel::NestedAggregateAttribute.new(shared_fields)
 
           dummy_model = DummyElasticSearchModel.create!(my_string: "Hello", my_nested_class: nested_attr1)
@@ -1122,15 +1121,15 @@ RSpec.describe ElasticsearchModels::Base do
           DummyElasticSearchModel.create!(my_string: "Hello", my_nested_class: nested_attr4)
           refresh_index
 
-          query_response1 = DummyElasticSearchModel.where(my_nested_class: shared_fields.merge(nested_hash_field: { a: Range.new(4, 6) }))
+          query_response1 = DummyElasticSearchModel.where(my_nested_class: shared_fields.merge(nested_int_field: (4..6)))
           expect(query_response1.models.count).to eq(1)
           expect(query_response1.models.first.to_store).to eq(dummy_model.to_store.deep_stringify_keys)
 
-          query_response2 = DummyElasticSearchModel.where(my_nested_class: shared_fields.merge(nested_hash_field: { a: Range.new(5, 5) }))
+          query_response2 = DummyElasticSearchModel.where(my_nested_class: shared_fields.merge(nested_int_field: (5..5)))
           expect(query_response2.models.count).to eq(1)
           expect(query_response2.models.first.to_store).to eq(dummy_model.to_store.deep_stringify_keys)
 
-          query_response3 = DummyElasticSearchModel.where(my_nested_class: shared_fields.merge(nested_hash_field: { a: Range.new(6, 4) }))
+          query_response3 = DummyElasticSearchModel.where(my_nested_class: shared_fields.merge(nested_int_field: (6..4)))
           expect(query_response3.models.count).to eq(0)
         end
       end
