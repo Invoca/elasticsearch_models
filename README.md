@@ -30,7 +30,10 @@ All classes that you want to store as documents should inherit from `Elasticsear
 ### Full Examples
 For complete example usage, see [the spec for ElasticsearchModels::Base]("https://github.com/Invoca/elasticsearch_models/blob/master/spec/base_spec.rb").
 
-Note: `rehydration_class` and `query_types` are fields used internally in `ElasticsearchModels::Base` so they should not be changed.
+Notes:
+* `rehydration_class` and `query_types` are fields used internally in `ElasticsearchModels::Base` so they should not be changed.
+* `hash` fields are stored as JSON blobs, meaning they are not queryable and can not be used for sorting. If necessary, use a nested class with named fields.
+
 
 ### Creating a model
 _create!_ will build and validate a model and then insert the model into Elasticsearch:
@@ -72,7 +75,7 @@ model = DummyElasticSearchModel.new(my_string: "Hi")
 model.save!
 ```
 
-Unlike active record, you cannot update an existing model.  
+Unlike active record, you cannot update an existing model.
 
 #### `#new_record?`
 
@@ -98,7 +101,7 @@ response = DummyElasticSearchModel.insert!(model.deep_squash_to_store, model.ind
 DummyElasticSearchModel.insert!(model.deep_squash_to_store, model.index_name)
 => raises ElasticsearchModels::Base::CreateError
 
-# Non-Hash value passed in for first argument"" 
+# Non-Hash value passed in for first argument
 DummyElasticSearchModel.insert!("abc", model.index_name)
 => raises RuntimeError
 ```
@@ -135,8 +138,8 @@ DummyElasticSearchModel.where(my_string: "Hi", my_int: [1, 2])
 # Query by attributes that must match and attributes that should match at least 1 value (can include ranges)
 DummyElasticSearchModel.where(my_string: "Hi", my_int: [1, (5..10)])
 
-# Query by matching nested classes and or hash fields
-DummyElasticSearchModel.where(my_nested_class: { nested_hash_field: { a: 1, b: 2 } })
+# Query by matching nested class fields (hashes and nested hashes are not queryable by default)
+DummyElasticSearchModel.where(my_nested_class: { nested_int_field: 5 })
 ```
 
 #### Adding sorting to queries
@@ -148,7 +151,7 @@ DummyElasticSearchModel.where(my_string: "Hi", _sort_by: { my_time: :asc })
 # Sort by multiple attributes
 DummyElasticSearchModel.where(_sort_by: [{ my_int: :desc }, { my_time: :asc }])
 
-# Sort by nested classes and hash fields
+# Sort by nested class fields (can not sort by fields in hashes and nested hashes by default)
 DummyElasticSearchModel.where(_sort_by: [{ "my_nested_class.nested_hash_field.a.b" => :desc })
 ```
 
@@ -181,8 +184,8 @@ DummyElasticSearchModel.where(_q: { my_string: "Hi", my_int: 5..10) })
 # Query by attributes where at least 1 value matches
 DummyElasticSearchModel.where(_q: { my_string: "Hi", my_int: [1, (5..10)] })
 
-# Query by nested classes or hash fields
-DummyElasticSearchModel.where(_q: { my_nested_class: { nested_hash_field: { a: 1, b: 2 } } })
+# Query by nested class fields (hashes and nested hashes are not queryable by default)
+DummyElasticSearchModel.where(_q: { my_nested_class: { nested_string_field: "Hey" })
 ```
 
 #### Querying with Inheritance
