@@ -101,7 +101,7 @@ response = DummyElasticSearchModel.insert!(model.deep_squash_to_store, model.ind
 DummyElasticSearchModel.insert!(model.deep_squash_to_store, model.index_name)
 => raises ElasticsearchModels::Base::CreateError
 
-# Non-Hash value passed in for first argument""
+# Non-Hash value passed in for first argument
 DummyElasticSearchModel.insert!("abc", model.index_name)
 => raises RuntimeError
 ```

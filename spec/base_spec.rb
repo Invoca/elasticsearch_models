@@ -950,18 +950,6 @@ RSpec.describe ElasticsearchModels::Base do
           expect(query_response.models.first.to_store).to eq(dummy_model.to_store)
         end
 
-        # it "filters by matching hash" do
-        #   # This is assuming the hash has the option `store_hash_as_json: false`
-        #   # Note: returned hashes will have stringified keys regardless of the input format
-        #   dummy_model = DummyElasticSearchModel.create!(my_string: "Hello", my_hash: { a: { b: 1, c: 1 } })
-        #   DummyElasticSearchModel.create!(my_string: "Hello", my_hash: { a: { b: 1, c: 2 } })
-        #   refresh_index
-
-        #   query_response = DummyElasticSearchModel.where(my_hash: { a: { b: 1, c: 1 } })
-        #   expect(query_response.models.count).to eq(1)
-        #   expect(query_response.models.first.to_store).to eq(dummy_model.to_store.deep_stringify_keys)
-        # end
-
         it "filters by matching nested class" do
           nested_bool_true  = DummyElasticSearchModel::NestedAggregateAttribute::NestedBoolAttribute.new(nested_bool: true)
           nested_bool_false = DummyElasticSearchModel::NestedAggregateAttribute::NestedBoolAttribute.new(nested_bool: false)
@@ -1087,26 +1075,6 @@ RSpec.describe ElasticsearchModels::Base do
           query_response3 = DummyElasticSearchModel.where(my_decimal: Range.new(BigDecimal(6), BigDecimal(4)))
           expect(query_response3.models.count).to eq(0)
         end
-
-        # it "filters by nested hash int range" do
-        #   # This is assuming the hash has the option `store_hash_as_json: false`
-        #   dummy_model = DummyElasticSearchModel.create!(my_string: "Hello", my_hash: { a: { b: 1, c: 5 } })
-        #   DummyElasticSearchModel.create!(my_string: "Hello", my_hash: { a: { b: 1, c: 1 } })
-        #   DummyElasticSearchModel.create!(my_string: "Hello", my_hash: { a: { b: 1, c: 10 } })
-        #   DummyElasticSearchModel.create!(my_string: "Hello")
-        #   refresh_index
-
-        #   query_response1 = DummyElasticSearchModel.where(my_hash: { a: { b: 1, c: Range.new(4, 6) } })
-        #   expect(query_response1.models.count).to eq(1)
-        #   expect(query_response1.models.first.to_store).to eq(dummy_model.to_store.deep_stringify_keys)
-
-        #   query_response2 = DummyElasticSearchModel.where(my_hash: { a: { b: 1, c: Range.new(5, 5) } })
-        #   expect(query_response2.models.count).to eq(1)
-        #   expect(query_response2.models.first.to_store).to eq(dummy_model.to_store.deep_stringify_keys)
-
-        #   query_response3 = DummyElasticSearchModel.where(my_hash: { a: { b: 1, c: Range.new(6, 4) } })
-        #   expect(query_response3.models.count).to eq(0)
-        # end
 
         it "filters by nested class int range" do
           shared_fields = { nested_string_field: "Hi" }
