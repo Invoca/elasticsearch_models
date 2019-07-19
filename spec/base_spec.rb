@@ -79,6 +79,10 @@ RSpec.describe ElasticsearchModels::Base do
           super
         end
       end
+
+      def default_index_template_name
+        "default"
+      end
     end
 
     def fixup_aggregate_schema(loaded_version)
@@ -1465,6 +1469,57 @@ RSpec.describe ElasticsearchModels::Base do
           it "filters down matches" do
             expect(distinct_values).to eq("my_string.keyword" => ["Hello", "Hello again"])
           end
+        end
+      end
+    end
+
+
+    context "index templates" do
+      before(:each) do
+        DummyElasticSearchModel.client_connection.indices.delete_template(name: "*")
+      end
+
+      context ".default_index_template_name" do
+        it "raise if not defined by subclass" do
+          expect { ElasticsearchModels::Base.default_index_template_name }.to raise_error(NotImplementedError)
+        end
+      end
+
+      context ".default_template_exists?" do
+        it "return true if template exists under the default name" do
+          DummyElasticSearchModel.client_connection.indices.put_template(
+            name: DummyElasticSearchModel.default_index_template_name,
+            body: { index_patterns: "test*" }
+          )
+
+          expect(DummyElasticSearchModel.default_index_template_exists?).to eq(true)
+        end
+
+        it "return falsey if template doesn't exists under the default name" do
+          expect(DummyElasticSearchModel.default_index_template_exists?).to eq(false)
+        end
+      end
+
+      context ".default_template_hash" do
+        it "return the default template body as a hash" do
+          DummyElasticSearchModel.client_connection.indices.put_template(
+            name: DummyElasticSearchModel.default_index_template_name,
+            body: { index_patterns: "test*", version: 1 }
+          )
+
+          expected_template_hash = {
+            "index_patterns" => ["test*"],
+            "version" => 1,
+            "aliases" => {},
+            "settings" => {},
+            "order" => 0,
+            "mappings" => {}
+          }
+          expect(DummyElasticSearchModel.default_index_template_hash).to eq(expected_template_hash)
+        end
+
+        it "return nil if default index template does not exist" do
+          expect(DummyElasticSearchModel.default_index_template_hash).to eq(nil)
         end
       end
     end

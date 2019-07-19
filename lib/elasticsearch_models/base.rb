@@ -73,11 +73,25 @@ module ElasticsearchModels
         distinct_values_response(response.aggregations, additional_fields: additional_fields)
       end
 
+      def default_index_template_exists?
+        client_connection.indices.exists_template?(name: default_index_template_name)
+      end
+
+      def default_index_template_hash
+        if default_index_template_exists?
+          client_connection.indices.get_template(name: default_index_template_name)[default_index_template_name]
+        end
+      end
+
       def client_connection
         raise NotImplementedError # Should return Elasticsearch::Client
       end
 
       def index_name
+        raise NotImplementedError
+      end
+
+      def default_index_template_name
         raise NotImplementedError
       end
 
