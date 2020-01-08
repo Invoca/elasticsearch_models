@@ -798,6 +798,7 @@ RSpec.describe ElasticsearchModels::Base do
             @dummy_model2 = DummyElasticSearchModel.create!(my_string: "Hello2")
             @dummy_model3 = DummyElasticSearchModel.create!(my_string: "Hey1", my_other_string: "Hello3")
             @dummy_model4 = DummyElasticSearchModel.create!(my_string: "Hey2", my_other_string: "Hello4")
+            @dummy_model5 = DummyElasticSearchModel.create!(my_string: "Whatsup")
             refresh_index
           end
 
@@ -896,6 +897,16 @@ RSpec.describe ElasticsearchModels::Base do
               expect_response_models_match(response.models, [@dummy_model1])
             end
           end
+        end
+
+        context "nil searching" do
+          let(:query_conditions) { {my_string: "Whatsup"} }
+          let(:match_conditions) { { my_other_string: nil } }
+
+          it "returns matching entries with missing attribute" do
+            expect_response_models_match(response.models, [@dummy_model5])
+          end
+
         end
       end
 

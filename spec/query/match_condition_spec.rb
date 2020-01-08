@@ -6,6 +6,13 @@ RSpec.describe ElasticsearchModels::Query::MatchCondition do
       expect(ElasticsearchModels::Query::MatchCondition.term_for(:a, 1)).to eq(match_phrase: { a: 1 })
     end
 
+    context "nil" do
+      it "returns a match_phrase expecting the value not to exist" do
+        expected_term = { bool: {must_not: { exists: {field: :a } } } }
+        expect(ElasticsearchModels::Query::MatchCondition.term_for(:a, nil)).to eq(expected_term)
+      end
+    end
+
     context "range" do
       it "returns range for inclusive end" do
         expected_term = { range: { a: { "gte" => 1, "lte" => 5 } } }

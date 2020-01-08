@@ -8,12 +8,13 @@ module ElasticsearchModels
       DEFAULT_ORDER_BY = "_count"
       DEFAULT_ORDER_DIRECTION = "desc"
 
-      def initialize(field:, size: nil, order: nil, partition: nil, num_partitions: nil)
+      def initialize(field:, size: nil, order: nil, partition: nil, num_partitions: nil, missing: nil)
         @field = field.presence or raise ArgumentError, "field must be provided"
 
         @size    = size
         @order   = Array.wrap(order).flatten.map { |term| order_term(term) }.compact.presence
         @include = { partition: partition, num_partitions: num_partitions }.compact.presence
+        @missing = missing
         @term    = _term
       end
 
@@ -26,7 +27,8 @@ module ElasticsearchModels
               field:   field,
               size:    @size,
               order:   @order,
-              include: @include
+              include: @include,
+              missing: @missing
             }.compact
           }
         }

@@ -17,6 +17,18 @@ RSpec.describe ElasticsearchModels::Query::Builder do
       @default_expected_params = { index: "index" }
     end
 
+    context "nil searching" do
+      it "formats nil term as missing field for search params body" do
+        expected_bool_body = {
+            must: [
+                { bool: { must_not: { exists: {field: "empty_term" } } } }
+            ]
+        }
+        expected_params = expected_query_body(bool_body: expected_bool_body)
+        expect(new_builder(empty_term: nil).search_params).to eq(expected_params)
+      end
+    end
+
     context "text searching" do
       it "includes the query_string in search_params when _q is given" do
         expected_bool_body = {
