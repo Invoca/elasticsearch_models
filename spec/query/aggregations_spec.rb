@@ -185,7 +185,7 @@ RSpec.describe ElasticsearchModels::Query::Aggregations do
             end
           end
 
-          context "and value is a Hash" do
+          context "And value is a Hash with missing option" do
             let(:condition) { { field: "some.field.keyword", size: 10_000, order: "_key", aggs: { field: "some.field.id", missing: 1 } } }
 
             it "also builds sub aggregation terms with provided missing option" do
