@@ -8,7 +8,7 @@ RSpec.describe ElasticsearchModels::Query::MatchCondition do
 
     context "nil" do
       it "returns a match_phrase expecting the value not to exist" do
-        expected_term = { bool: {must_not: { exists: {field: :a } } } }
+        expected_term = { bool: { must_not: { exists: { field: :a } } } }
         expect(ElasticsearchModels::Query::MatchCondition.term_for(:a, nil)).to eq(expected_term)
       end
     end

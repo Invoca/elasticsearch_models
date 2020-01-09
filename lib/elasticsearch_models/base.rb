@@ -149,4 +149,3 @@ module ElasticsearchModels
     end
   end
 end
-
