@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module ElasticsearchModels
-  class DeepSquash
+  module DeepSquash
     def deep_squash(object)
       case object
       when Hash

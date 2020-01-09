@@ -2,7 +2,6 @@
 
 module ElasticsearchModels
   class Base < ElasticsearchModels::Aggregate
-    # include ElasticsearchModels::DeepSquash
 
     class CreateError < StandardError; end
 
