@@ -913,7 +913,6 @@ RSpec.describe ElasticsearchModels::Base do
           it "returns matching entries with missing attribute" do
             expect_response_models_match(response.models, [@dummy_model1])
           end
-
         end
       end
 
