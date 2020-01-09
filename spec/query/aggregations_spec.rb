@@ -190,28 +190,27 @@ RSpec.describe ElasticsearchModels::Query::Aggregations do
 
             it "also builds sub aggregation terms with provided missing option" do
               expected_terms = {
-                  aggs: {
-                      "some.field.keyword" => {
-                          terms: {
-                              field: "some.field.keyword",
-                              size: 10_000,
-                              order: [{ "_key" => "desc" }]
-                          },
-                          aggs: {
-                              "some.field.id" => {
-                                  terms: {
-                                      field: "some.field.id",
-                                      missing: 1
-                                  }
-                              }
+                aggs: {
+                  "some.field.keyword" => {
+                    terms: {
+                      field: "some.field.keyword",
+                          size: 10_000,
+                          order: [{ "_key" => "desc" }]
+                    },
+                        aggs: {
+                          "some.field.id" => {
+                            terms: {
+                              field: "some.field.id",
+                                  missing: 1
+                            }
                           }
-                      }
+                        }
                   }
+                }
               }
               expect(terms).to eq(expected_terms)
             end
           end
-
 
           context "and value is an Array" do
             let(:condition) { { field: "some.field.keyword", size: 10_000, order: "_key", aggs: ["some.field.id", "some.field.other"] } }

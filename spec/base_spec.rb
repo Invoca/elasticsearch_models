@@ -907,7 +907,7 @@ RSpec.describe ElasticsearchModels::Base do
             refresh_index
           end
 
-          let(:query_conditions) { { my_string: "Whatsup"} }
+          let(:query_conditions) { { my_string: "Whatsup" } }
           let(:match_conditions) { { my_other_string: nil } }
 
           it "returns matching entries with missing attribute" do
