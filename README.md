@@ -1,6 +1,19 @@
 # ElasticsearchModels
 Model representation for Elasticsearch documents based on Aggregate
 
+
+## Working In This Repo
+When working and making changes in this repo it is required to...
+* Update the `README.md` relative to your changes (API examples are always recommended!).
+* Bump the gem version appropriately (see MAJOR.MINOR.PATCH summary below).
+* Add a corresponding version entry describing what is being Added, Changed, and or Removed in `CHANGELOG.md`.
+
+### MAJOR.MINOR.PATCH Summary (from https://semver.org/)
+Given a version number MAJOR.MINOR.PATCH, increment the:
+MAJOR version when you make incompatible API changes.
+MINOR version when you add functionality in a backwards compatible manner.
+PATCH version when you make backwards compatible bug fixes.
+
 ## Installation
 
 Add this line to your application's Gemfile:
@@ -171,9 +184,15 @@ String searching using the `_q` parameter is fuzzy by default (`*` on both ends 
 As well, search terms that include spaces will `AND` each term instead of the implicit `OR`
 
 e.g. `full text` search string will be converted to the following query string `(*full AND text*)`
+
+Querying for nil fields will return documents that have `nil` or an empty array`[]` for the given key
+
 ```ruby
 # Query by full text string searching
 DummyElasticSearchModel.where(_q: "Hello")
+
+# Query by nil fields
+DummyElasticSearchModel.where(_q: { my_string: nil }) 
 
 # Query by fuzzy text searching on a specific field
 DummyElasticSearchModel.where(_q: { my_string: "Hello" })
@@ -276,6 +295,7 @@ Supported Aggregation query params:
 * `order`: The ordering for the response
 * `partitions`: The current partition to query in (requires `num_partitions` if set)
 * `num_partitions`: The amount of partitions to bucket results into (requires `partition` if set)
+* `missing`: The default value to be used for a missing field
 
 ```ruby
 # Aggregate on a single term
@@ -296,6 +316,9 @@ DummyElasticSearchModel.where(_aggs: { field: "my_string.keyword", order: { "_ke
 
 # Aggregate on a single field with multiple ordering options
 DummyElasticSearchModel.where(_aggs: { field: "my_string.keyword", order: ["_key", { "_count" => "asc" }] })
+
+# Aggregate on a single field while populating missing fields with the provided default value
+DummyElasticSearchModel.where(_aggs: { field: "my_string.keyword", missing: "N/A" }) 
 
 # Aggregate on a single field with sub-aggregations (supports infinite nestings)
 DummyElasticSearchModel.where(_aggs: { field: "my_string.keyword", aggs: "my_id" })
