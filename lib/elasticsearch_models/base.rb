@@ -2,8 +2,9 @@
 
 module ElasticsearchModels
   class Base < ElasticsearchModels::Aggregate
-    class CreateError < StandardError; end
     include ElasticsearchModels::DeepSquash
+
+    class CreateError < StandardError; end
 
     # ElasticSearch is deprecating _type field, however it is still required.
     DEPRECATED_TYPE = "ElasticsearchModel"

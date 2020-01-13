@@ -1,12 +1,13 @@
 # frozen_string_literal: true
 
 RSpec.describe ElasticsearchModels::Query::AggregationTerm do
-  let(:options) { { field: field, size: size, order: order, partition: partition, num_partitions: num_partitions }.compact }
+  let(:options) { { field: field, size: size, order: order, partition: partition, num_partitions: num_partitions, missing: missing }.compact }
   let(:field) { "some.field.keyword" }
   let(:size) { }
   let(:order) { }
   let(:partition) { }
   let(:num_partitions) { }
+  let(:missing) { }
 
   describe "#initialize" do
     subject(:aggregation) { ElasticsearchModels::Query::AggregationTerm.new(options) }
@@ -68,6 +69,11 @@ RSpec.describe ElasticsearchModels::Query::AggregationTerm do
 
     context "when num_partitions is provided" do
       let(:num_partitions) { 10 }
+      it { should be }
+    end
+
+    context "when missing is provided" do
+      let(:missing) { "N/A" }
       it { should be }
     end
   end
@@ -142,6 +148,15 @@ RSpec.describe ElasticsearchModels::Query::AggregationTerm do
       let(:expected_inner_terms) { { field: "some.field.keyword", include: { partition: 1, num_partitions: 1 } } }
 
       it "nests values under include key within inner terms" do
+        expect(term).to eq(expected_term)
+      end
+    end
+
+    context "when missing is provided" do
+      let(:missing) { 1 }
+      let(:expected_inner_terms) { { field: "some.field.keyword", missing: 1 } }
+
+      it "includes the missing field in the inner terms" do
         expect(term).to eq(expected_term)
       end
     end
