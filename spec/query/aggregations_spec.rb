@@ -190,21 +190,21 @@ RSpec.describe ElasticsearchModels::Query::Aggregations do
 
             it "builds aggregation terms with missing field at the top level" do
               expected_terms = {
-                  aggs: {
+                aggs: {
                   "some.field.keyword" => {
-                      terms: {
-                        field: "some.field.keyword",
+                    terms: {
+                      field: "some.field.keyword",
                         size: 10000,
-                        order: [{ "_key"=>"desc" }],
+                        order: [{ "_key" => "desc" }],
                         missing: "N/A"
                     },
                     aggs: {
-                        "some.field.id" => {
-                            terms: {
-                              field: "some.field.id"
-                          }
+                      "some.field.id" => {
+                        terms: {
+                          field: "some.field.id"
                         }
                       }
+                    }
                   }
                 }
               }
@@ -240,28 +240,35 @@ RSpec.describe ElasticsearchModels::Query::Aggregations do
           end
 
           context "And value is a Hash with missing top level and additional field" do
-            let(:condition) { { field: "some.field.keyword", missing: "N/A", size: 10_000, order: "_key", aggs: { field: "some.field.id", missing: 1 } } }
+            let(:condition) do
+              {
+                field: "some.field.keyword",
+                  missing: "N/A", size: 10_000,
+                  order: "_key",
+                  aggs: { field: "some.field.id", missing: 1 }
+              }
+            end
 
             it "builds aggregation terms with missing field at the top level and in additional aggregations" do
               expected_terms = {
-                  aggs: {
-                      "some.field.keyword" => {
-                          terms: {
-                              field: "some.field.keyword",
-                              size: 10000,
-                              order: [{ "_key"=>"desc" }],
-                              missing: "N/A"
-                          },
-                          aggs: {
-                              "some.field.id" => {
-                                  terms: {
-                                      field: "some.field.id",
-                                      missing: 1
-                                  }
-                              }
+                aggs: {
+                  "some.field.keyword" => {
+                    terms: {
+                      field: "some.field.keyword",
+                          size: 10000,
+                          order: [{ "_key" => "desc" }],
+                          missing: "N/A"
+                    },
+                        aggs: {
+                          "some.field.id" => {
+                            terms: {
+                              field: "some.field.id",
+                                  missing: 1
+                            }
                           }
-                      }
+                        }
                   }
+                }
               }
               expect(terms).to eq(expected_terms)
             end

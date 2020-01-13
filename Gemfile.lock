@@ -30,7 +30,7 @@ GIT
 PATH
   remote: .
   specs:
-    elasticsearch_models (0.2.7)
+    elasticsearch_models (1.0.0)
       activesupport
       elasticsearch (= 6.1.0)
       hobo_support (= 2.0.1)
