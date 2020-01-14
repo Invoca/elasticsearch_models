@@ -45,7 +45,7 @@ RSpec.describe ElasticsearchModels::Base do
       attribute :nested_bool_class,   NestedBoolAttribute
     end
 
-    attribute :my_string,       :string,  required: true
+    attribute :my_string,       :string
     attribute :my_other_string, :string
     attribute :my_bool,         :boolean, default: false
     attribute :my_hash,         :hash
@@ -291,8 +291,6 @@ RSpec.describe ElasticsearchModels::Base do
       end
 
       it "validates the model before attempting to insert to Elasticsearch" do
-        expect { DummyElasticSearchModel.create! }.to raise_error(ActiveRecord::RecordInvalid, "Validation failed: My string must be set")
-
         refresh_index
         search_response = @elasticsearch_test_client.search(index: DummyElasticSearchModel.index_name)
         expect(search_response.dig("hits", "total")).to eq(0)
@@ -1283,7 +1281,8 @@ RSpec.describe ElasticsearchModels::Base do
           size:              size,
           partition:         partition,
           num_partitions:    num_partitions,
-          where:             where
+          where:             where,
+          missing:           missing
         }.compact
       end
       let(:additional_fields) { }
@@ -1292,6 +1291,7 @@ RSpec.describe ElasticsearchModels::Base do
       let(:partition) { }
       let(:num_partitions) { }
       let(:where) { }
+      let(:missing) { }
 
       before :each do
         DummyElasticSearchModel.create!(my_string: "Hey", my_int: 0, my_bool: true)
@@ -1299,10 +1299,77 @@ RSpec.describe ElasticsearchModels::Base do
         DummyElasticSearchModel.create!(my_string: "This is a test", my_int: 2)
         DummyElasticSearchModel.create!(my_string: "This is a test", my_int: 2)
         DummyElasticSearchModel.create!(my_string: "Hello", my_int: 3, my_bool: true)
-        DummyElasticSearchModel.create!(my_string: "Hello again", my_int: 4, my_bool: true)
+        DummyElasticSearchModel.create!(my_string: "Hello again", my_int: 4, my_bool: true, my_other_string: nil)
         DummyElasticSearchModel.create!(my_string: "How are you?", my_other_string: "found by fuzzy matching", my_int: 5)
-
+        DummyElasticSearchModel.create!(my_string: nil, my_other_string: nil)
         refresh_index
+      end
+
+      context "with top-level field nil" do
+        let(:missing) { "Missing field" }
+
+        it "populates empty top-level field with missing value" do
+          expected_values = { "my_string.keyword" => ["Hello", "This is a test", "Hello again", "Hey", "How are you?", "Missing field"] }
+          expect(distinct_values).to eq(expected_values)
+        end
+      end
+
+      context "with additional field nil", lauren: true do
+        let(:additional_fields) { [{ field: "my_other_string.keyword", missing: "Missing additional field", order: { "_term" => "asc" } }] }
+
+        it "populates additional empty fields with missing value" do
+          expected_values = {
+            "my_string.keyword" => {
+              "Hello" => {
+                "my_other_string.keyword" => ["Missing additional field"]
+              },
+                "How are you?" => {
+                  "my_other_string.keyword" => ["found by fuzzy matching"]
+                },
+                "This is a test" => {
+                  "my_other_string.keyword" => ["Missing additional field"]
+                },
+                "Hey" => {
+                  "my_other_string.keyword" => ["Missing additional field"]
+                },
+                "Hello again" => {
+                  "my_other_string.keyword" => ["Missing additional field"]
+                }
+            }
+          }
+          expect(distinct_values).to eq(expected_values)
+        end
+      end
+
+      context "with both top-level and additional field nil" do
+        let(:missing) { "Missing field" }
+        let(:additional_fields) { [{ field: "my_other_string.keyword", missing: "Missing additional field" }] }
+
+        it "populates empty fields from all aggregations (top and lower levels) with missing value" do
+          expected_values = {
+            "my_string.keyword" => {
+              "This is a test" => {
+                "my_other_string.keyword" => ["Missing additional field"]
+              },
+              "How are you?" => {
+                "my_other_string.keyword" => ["found by fuzzy matching"]
+              },
+              "Hey" => {
+                "my_other_string.keyword" => ["Missing additional field"]
+              },
+              "Hello" => {
+                "my_other_string.keyword" => ["Missing additional field"]
+              },
+              "Hello again" => {
+                "my_other_string.keyword" => ["Missing additional field"]
+              },
+              "Missing field" => {
+                "my_other_string.keyword" => ["Missing additional field"]
+              }
+            }
+          }
+          expect(distinct_values).to eq(expected_values)
+        end
       end
 
       context "when field is not aggregateable" do
