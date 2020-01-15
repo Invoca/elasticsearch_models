@@ -70,7 +70,7 @@ module ElasticsearchModels
         additional_fields.is_a?(Array) or raise ArgumentError, "additional_fields must be an Array"
         additional_fields.all? do |f|
           f.presence.is_a?(String) || (f.is_a?(Hash) && f.key?(:field))
-        end or raise ArgumentError, "additional_fields must all be present Strings"
+        end or raise ArgumentError, "additional_fields must all be Strings or Hashes with a :field key"
         additional_field_names = additional_fields.map { |f| f.is_a?(String) ? f : f[:field] }
 
         response = where(_aggs: { field: field, aggs: additional_fields.presence, **params }.compact, **where.merge(_size: 0))

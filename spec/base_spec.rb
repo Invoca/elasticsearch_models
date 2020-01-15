@@ -45,7 +45,7 @@ RSpec.describe ElasticsearchModels::Base do
       attribute :nested_bool_class,   NestedBoolAttribute
     end
 
-    attribute :my_string,       :string
+    attribute :my_string,       :string, required: true
     attribute :my_other_string, :string
     attribute :my_bool,         :boolean, default: false
     attribute :my_hash,         :hash
@@ -291,6 +291,7 @@ RSpec.describe ElasticsearchModels::Base do
       end
 
       it "validates the model before attempting to insert to Elasticsearch" do
+        expect { DummyElasticSearchModel.create!() }.to raise_error(ActiveRecord::RecordInvalid, "Validation failed: My string must be set")
         refresh_index
         search_response = @elasticsearch_test_client.search(index: DummyElasticSearchModel.index_name)
         expect(search_response.dig("hits", "total")).to eq(0)
@@ -1314,7 +1315,7 @@ RSpec.describe ElasticsearchModels::Base do
         end
       end
 
-      context "with additional field nil", lauren: true do
+      context "with additional field nil" do
         let(:additional_fields) { [{ field: "my_other_string.keyword", missing: "Missing additional field", order: { "_term" => "asc" } }] }
 
         it "populates additional empty fields with missing value" do
@@ -1323,18 +1324,18 @@ RSpec.describe ElasticsearchModels::Base do
               "Hello" => {
                 "my_other_string.keyword" => ["Missing additional field"]
               },
-                "How are you?" => {
-                  "my_other_string.keyword" => ["found by fuzzy matching"]
-                },
-                "This is a test" => {
-                  "my_other_string.keyword" => ["Missing additional field"]
-                },
-                "Hey" => {
-                  "my_other_string.keyword" => ["Missing additional field"]
-                },
-                "Hello again" => {
-                  "my_other_string.keyword" => ["Missing additional field"]
-                }
+              "How are you?" => {
+                "my_other_string.keyword" => ["found by fuzzy matching"]
+              },
+              "This is a test" => {
+                "my_other_string.keyword" => ["Missing additional field"]
+              },
+              "Hey" => {
+                "my_other_string.keyword" => ["Missing additional field"]
+              },
+              "Hello again" => {
+                "my_other_string.keyword" => ["Missing additional field"]
+              }
             }
           }
           expect(distinct_values).to eq(expected_values)
@@ -1439,7 +1440,7 @@ RSpec.describe ElasticsearchModels::Base do
           let(:additional_fields) { ["my_int", ""] }
 
           it "raises ArgumentError if any of the values provided are not strings" do
-            expect { distinct_values }.to raise_error(ArgumentError, "additional_fields must all be present Strings")
+            expect { distinct_values }.to raise_error(ArgumentError, "additional_fields must all be Strings or Hashes with a :field key")
           end
         end
 
@@ -1447,7 +1448,7 @@ RSpec.describe ElasticsearchModels::Base do
           let(:additional_fields) { ["my_int", 123] }
 
           it "raises ArgumentError if any of the values provided are not strings" do
-            expect { distinct_values }.to raise_error(ArgumentError, "additional_fields must all be present Strings")
+            expect { distinct_values }.to raise_error(ArgumentError, "additional_fields must all be Strings or Hashes with a :field key")
           end
         end
       end

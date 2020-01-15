@@ -132,6 +132,9 @@ Queries return a `ElasticsearchModels::QueryResponse` which will contain `raw_re
 # Query by elasticsearch document id
 DummyElasticSearchModel.where(_id: "1234567890")
 
+# Query by nil or missing attributes
+DummyElasticSearchModel.where(my_string: nil) 
+
 # Query by attributes that all must match
 DummyElasticSearchModel.where(my_string: "Hi")
 DummyElasticSearchModel.where(my_string: "Hi", my_int: 2)
@@ -185,14 +188,9 @@ As well, search terms that include spaces will `AND` each term instead of the im
 
 e.g. `full text` search string will be converted to the following query string `(*full AND text*)`
 
-Querying for nil fields will return documents that have `nil` or an empty array`[]` for the given key
-
 ```ruby
 # Query by full text string searching
 DummyElasticSearchModel.where(_q: "Hello")
-
-# Query by nil fields
-DummyElasticSearchModel.where(_q: { my_string: nil }) 
 
 # Query by fuzzy text searching on a specific field
 DummyElasticSearchModel.where(_q: { my_string: "Hello" })
@@ -363,6 +361,9 @@ DummyElasticSearchModel.distinct_values("my_string.keyword", partition: 1, num_p
 # Distinct Values with Additional Fields
 DummyElasticSearchModel.distinct_values("my_int", additional_fields: ["my_string"])
 DummyElasticSearchModel.distinct_values("my_int", additional_fields: ["my_int", "my_string"])
+
+# Distinct Values with Additional Fields and Missing Fields
+DummyElasticSearchModel.distinct_values("my_int", missing: 0, additional_fields: [{ field: "my_string", missing: "N/A" }]) 
 ```
 
 ### Handling Model Name Changes

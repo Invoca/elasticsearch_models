@@ -194,9 +194,9 @@ RSpec.describe ElasticsearchModels::Query::Aggregations do
                   "some.field.keyword" => {
                     terms: {
                       field: "some.field.keyword",
-                        size: 10000,
-                        order: [{ "_key" => "desc" }],
-                        missing: "N/A"
+                      size: 10000,
+                      order: [{ "_key" => "desc" }],
+                      missing: "N/A"
                     },
                     aggs: {
                       "some.field.id" => {
@@ -221,14 +221,14 @@ RSpec.describe ElasticsearchModels::Query::Aggregations do
                   "some.field.keyword" => {
                     terms: {
                       field: "some.field.keyword",
-                          size: 10_000,
-                          order: [{ "_key" => "desc" }]
+                      size: 10_000,
+                      order: [{ "_key" => "desc" }]
                     },
                         aggs: {
                           "some.field.id" => {
                             terms: {
                               field: "some.field.id",
-                                  missing: 1
+                              missing: 1
                             }
                           }
                         }
@@ -243,9 +243,9 @@ RSpec.describe ElasticsearchModels::Query::Aggregations do
             let(:condition) do
               {
                 field: "some.field.keyword",
-                  missing: "N/A", size: 10_000,
-                  order: "_key",
-                  aggs: { field: "some.field.id", missing: 1 }
+                missing: "N/A", size: 10_000,
+                order: "_key",
+                aggs: { field: "some.field.id", missing: 1 }
               }
             end
 
