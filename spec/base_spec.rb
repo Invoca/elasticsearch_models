@@ -47,6 +47,7 @@ RSpec.describe ElasticsearchModels::Base do
 
     attribute :my_string,       :string
     attribute :my_other_string, :string
+    attribute :my_required,     :string, default: 'Required', required: true
     attribute :my_bool,         :boolean, default: false
     attribute :my_hash,         :hash
     attribute :my_int,          :integer
@@ -138,6 +139,7 @@ RSpec.describe ElasticsearchModels::Base do
         expected_to_store = {
           "my_string"                => "Hello",
           "my_other_string"          => nil,
+          "my_required"              => "Required",
           "my_bool"                  => false,
           "my_hash"                  => "{\"a\":[]}",
           "my_int"                   => nil,
@@ -155,7 +157,8 @@ RSpec.describe ElasticsearchModels::Base do
         expect(dummy_model.to_store).to eq(expected_to_store)
 
         expected_deep_squash_to_store = {
-          "my_string"           => "Hello",
+          "my_string" => "Hello",
+          "my_required" => "Required",
           "my_bool"             => false,
           "my_hash"             => "{\"a\":[]}",
           "data_schema_version" => "1.0",
@@ -193,7 +196,8 @@ RSpec.describe ElasticsearchModels::Base do
           "_id"    => "i5JhrmcBUU6q7YBzawfu",
           "_score" => 4.2685113,
           "_source" => {
-            "my_string"          => "Hello",
+            "my_string" => "Hello",
+            "my_required" => "Required",
             "my_bool"            => false,
             "my_int"             => 150,
             "rehydration_class"  => "DummyElasticSearchModel",
@@ -208,6 +212,7 @@ RSpec.describe ElasticsearchModels::Base do
           "_type"                    => "ElasticsearchModel",
           "my_string"                => "Hello",
           "my_other_string"          => nil,
+          "my_required"              => "Required",
           "my_bool"                  => false,
           "my_hash"                  => {},
           "my_int"                   => 150,
@@ -228,7 +233,9 @@ RSpec.describe ElasticsearchModels::Base do
 
     context ".create!" do
       before(:each) do
-        @default_fields = { "my_string" => "Hello", "my_bool" => false,
+        @default_fields = { "my_string" => "Hello",
+                            "my_required" => "Required",
+                            "my_bool" => false,
                             "data_schema_version" => "1.0",
                             "my_hash"             => "{}",
                             "rehydration_class"   => "DummyElasticSearchModel",
@@ -270,8 +277,9 @@ RSpec.describe ElasticsearchModels::Base do
         expect(dummy_connection).to receive(:index).and_return(error_response)
 
         expected_error = "Error creating elasticsearch model. Body: {\"rehydration_class\"=>\"DummyElasticSearchModel\", "\
-                         "\"query_types\"=>[\"DummyElasticSearchModel\"], \"my_string\"=>\"Hello\", \"my_bool\"=>false, \"my_hash\"=>\"{}\", "\
-                         "\"data_schema_version\"=>\"1.0\"}. Response: {\"_shards\"=>{\"total\"=>2, \"successful\"=>0, \"failed\"=>1}}"
+                         "\"query_types\"=>[\"DummyElasticSearchModel\"], \"my_string\"=>\"Hello\", \"my_required\"=>\"Required\", "\
+                         "\"my_bool\"=>false, \"my_hash\"=>\"{}\", \"data_schema_version\"=>\"1.0\"}. "\
+                         "Response: {\"_shards\"=>{\"total\"=>2, \"successful\"=>0, \"failed\"=>1}}"
         expect { DummyElasticSearchModel.create!(my_string: "Hello") }.to raise_error(ElasticsearchModels::Base::CreateError, expected_error)
       end
 
@@ -291,7 +299,8 @@ RSpec.describe ElasticsearchModels::Base do
       end
 
       it "validates the model before attempting to insert to Elasticsearch" do
-        # expect { DummyElasticSearchModel.create!() }.to raise_error(ActiveRecord::RecordInvalid, "Validation failed: My string must be set")
+        expect { DummyElasticSearchModel.create!(my_required: nil) }.to raise_error(ActiveRecord::RecordInvalid,
+                                                                                    "Validation failed: My required must be set")
         refresh_index
         search_response = @elasticsearch_test_client.search(index: DummyElasticSearchModel.index_name)
         expect(search_response.dig("hits", "total")).to eq(0)
@@ -498,6 +507,7 @@ RSpec.describe ElasticsearchModels::Base do
           "rehydration_class" => "DummyElasticSearchModel",
           "query_types"       => ["DummyElasticSearchModel"],
           "my_string"         => "Hello",
+          "my_required"       => "Required",
           "my_bool"           => true,
           "my_hash"           => "{\"first_layer\":{\"nested_layer\":1}}",
           "my_time"           => current_time.utc.iso8601,
@@ -562,8 +572,9 @@ RSpec.describe ElasticsearchModels::Base do
         expect(dummy_connection).to receive(:index).and_return(error_response)
 
         expected_error = "Error creating elasticsearch model. Body: {\"rehydration_class\"=>\"DummyElasticSearchModel\", "\
-                         "\"query_types\"=>[\"DummyElasticSearchModel\"], \"my_string\"=>\"Hello\", \"my_bool\"=>false, \"my_hash\"=>\"{}\", "\
-                         "\"data_schema_version\"=>\"1.0\"}. Response: {\"_shards\"=>{\"total\"=>2, \"successful\"=>0, \"failed\"=>1}}"
+                         "\"query_types\"=>[\"DummyElasticSearchModel\"], \"my_string\"=>\"Hello\", \"my_required\"=>\"Required\", "\
+                         "\"my_bool\"=>false, \"my_hash\"=>\"{}\", \"data_schema_version\"=>\"1.0\"}. "\
+                         "Response: {\"_shards\"=>{\"total\"=>2, \"successful\"=>0, \"failed\"=>1}}"
         expect { DummyElasticSearchModel.insert!(dummy_model.deep_squash_to_store, dummy_model.index_name) }
           .to raise_error(ElasticsearchModels::Base::CreateError, expected_error)
       end
