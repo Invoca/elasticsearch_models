@@ -13,7 +13,7 @@ module ElasticsearchModels
         @sort_by            = params.delete(:_sort_by)
         @ignore_unavailable = params.delete(:_ignore_unavailable)
 
-        @params = params.compact
+        @params = params
       end
 
       def search_params

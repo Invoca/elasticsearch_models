@@ -45,8 +45,9 @@ RSpec.describe ElasticsearchModels::Base do
       attribute :nested_bool_class,   NestedBoolAttribute
     end
 
-    attribute :my_string,       :string,  required: true
+    attribute :my_string,       :string
     attribute :my_other_string, :string
+    attribute :my_required,     :string, default: 'Required', required: true
     attribute :my_bool,         :boolean, default: false
     attribute :my_hash,         :hash
     attribute :my_int,          :integer
@@ -138,6 +139,7 @@ RSpec.describe ElasticsearchModels::Base do
         expected_to_store = {
           "my_string"                => "Hello",
           "my_other_string"          => nil,
+          "my_required"              => "Required",
           "my_bool"                  => false,
           "my_hash"                  => "{\"a\":[]}",
           "my_int"                   => nil,
@@ -155,7 +157,8 @@ RSpec.describe ElasticsearchModels::Base do
         expect(dummy_model.to_store).to eq(expected_to_store)
 
         expected_deep_squash_to_store = {
-          "my_string"           => "Hello",
+          "my_string" => "Hello",
+          "my_required" => "Required",
           "my_bool"             => false,
           "my_hash"             => "{\"a\":[]}",
           "data_schema_version" => "1.0",
@@ -193,7 +196,8 @@ RSpec.describe ElasticsearchModels::Base do
           "_id"    => "i5JhrmcBUU6q7YBzawfu",
           "_score" => 4.2685113,
           "_source" => {
-            "my_string"          => "Hello",
+            "my_string" => "Hello",
+            "my_required" => "Required",
             "my_bool"            => false,
             "my_int"             => 150,
             "rehydration_class"  => "DummyElasticSearchModel",
@@ -208,6 +212,7 @@ RSpec.describe ElasticsearchModels::Base do
           "_type"                    => "ElasticsearchModel",
           "my_string"                => "Hello",
           "my_other_string"          => nil,
+          "my_required"              => "Required",
           "my_bool"                  => false,
           "my_hash"                  => {},
           "my_int"                   => 150,
@@ -228,7 +233,9 @@ RSpec.describe ElasticsearchModels::Base do
 
     context ".create!" do
       before(:each) do
-        @default_fields = { "my_string" => "Hello", "my_bool" => false,
+        @default_fields = { "my_string" => "Hello",
+                            "my_required" => "Required",
+                            "my_bool" => false,
                             "data_schema_version" => "1.0",
                             "my_hash"             => "{}",
                             "rehydration_class"   => "DummyElasticSearchModel",
@@ -270,8 +277,9 @@ RSpec.describe ElasticsearchModels::Base do
         expect(dummy_connection).to receive(:index).and_return(error_response)
 
         expected_error = "Error creating elasticsearch model. Body: {\"rehydration_class\"=>\"DummyElasticSearchModel\", "\
-                         "\"query_types\"=>[\"DummyElasticSearchModel\"], \"my_string\"=>\"Hello\", \"my_bool\"=>false, \"my_hash\"=>\"{}\", "\
-                         "\"data_schema_version\"=>\"1.0\"}. Response: {\"_shards\"=>{\"total\"=>2, \"successful\"=>0, \"failed\"=>1}}"
+                         "\"query_types\"=>[\"DummyElasticSearchModel\"], \"my_string\"=>\"Hello\", \"my_required\"=>\"Required\", "\
+                         "\"my_bool\"=>false, \"my_hash\"=>\"{}\", \"data_schema_version\"=>\"1.0\"}. "\
+                         "Response: {\"_shards\"=>{\"total\"=>2, \"successful\"=>0, \"failed\"=>1}}"
         expect { DummyElasticSearchModel.create!(my_string: "Hello") }.to raise_error(ElasticsearchModels::Base::CreateError, expected_error)
       end
 
@@ -291,8 +299,8 @@ RSpec.describe ElasticsearchModels::Base do
       end
 
       it "validates the model before attempting to insert to Elasticsearch" do
-        expect { DummyElasticSearchModel.create! }.to raise_error(ActiveRecord::RecordInvalid, "Validation failed: My string must be set")
-
+        expect { DummyElasticSearchModel.create!(my_required: nil) }.to raise_error(ActiveRecord::RecordInvalid,
+                                                                                    "Validation failed: My required must be set")
         refresh_index
         search_response = @elasticsearch_test_client.search(index: DummyElasticSearchModel.index_name)
         expect(search_response.dig("hits", "total")).to eq(0)
@@ -499,6 +507,7 @@ RSpec.describe ElasticsearchModels::Base do
           "rehydration_class" => "DummyElasticSearchModel",
           "query_types"       => ["DummyElasticSearchModel"],
           "my_string"         => "Hello",
+          "my_required"       => "Required",
           "my_bool"           => true,
           "my_hash"           => "{\"first_layer\":{\"nested_layer\":1}}",
           "my_time"           => current_time.utc.iso8601,
@@ -563,8 +572,9 @@ RSpec.describe ElasticsearchModels::Base do
         expect(dummy_connection).to receive(:index).and_return(error_response)
 
         expected_error = "Error creating elasticsearch model. Body: {\"rehydration_class\"=>\"DummyElasticSearchModel\", "\
-                         "\"query_types\"=>[\"DummyElasticSearchModel\"], \"my_string\"=>\"Hello\", \"my_bool\"=>false, \"my_hash\"=>\"{}\", "\
-                         "\"data_schema_version\"=>\"1.0\"}. Response: {\"_shards\"=>{\"total\"=>2, \"successful\"=>0, \"failed\"=>1}}"
+                         "\"query_types\"=>[\"DummyElasticSearchModel\"], \"my_string\"=>\"Hello\", \"my_required\"=>\"Required\", "\
+                         "\"my_bool\"=>false, \"my_hash\"=>\"{}\", \"data_schema_version\"=>\"1.0\"}. "\
+                         "Response: {\"_shards\"=>{\"total\"=>2, \"successful\"=>0, \"failed\"=>1}}"
         expect { DummyElasticSearchModel.insert!(dummy_model.deep_squash_to_store, dummy_model.index_name) }
           .to raise_error(ElasticsearchModels::Base::CreateError, expected_error)
       end
@@ -798,6 +808,7 @@ RSpec.describe ElasticsearchModels::Base do
             @dummy_model2 = DummyElasticSearchModel.create!(my_string: "Hello2")
             @dummy_model3 = DummyElasticSearchModel.create!(my_string: "Hey1", my_other_string: "Hello3")
             @dummy_model4 = DummyElasticSearchModel.create!(my_string: "Hey2", my_other_string: "Hello4")
+            @dummy_model5 = DummyElasticSearchModel.create!(my_string: "Whatsup")
             refresh_index
           end
 
@@ -895,6 +906,22 @@ RSpec.describe ElasticsearchModels::Base do
             it "returns all matching entries" do
               expect_response_models_match(response.models, [@dummy_model1])
             end
+          end
+        end
+
+        context "nil searching" do
+          before(:each) do
+            @dummy_model1 = DummyElasticSearchModel.create!(my_string: "Whatsup")
+            @dummy_model2 = DummyElasticSearchModel.create!(my_string: "Whatsup", my_other_string: "hey there")
+            @dummy_model3 = DummyElasticSearchModel.create!(my_string: "Hello")
+            refresh_index
+          end
+
+          let(:query_conditions) { { my_string: "Whatsup" } }
+          let(:match_conditions) { { my_other_string: nil } }
+
+          it "returns matching entries with missing attribute" do
+            expect_response_models_match(response.models, [@dummy_model1])
           end
         end
       end
@@ -1266,7 +1293,8 @@ RSpec.describe ElasticsearchModels::Base do
           size:              size,
           partition:         partition,
           num_partitions:    num_partitions,
-          where:             where
+          where:             where,
+          missing:           missing
         }.compact
       end
       let(:additional_fields) { }
@@ -1275,6 +1303,7 @@ RSpec.describe ElasticsearchModels::Base do
       let(:partition) { }
       let(:num_partitions) { }
       let(:where) { }
+      let(:missing) { }
 
       before :each do
         DummyElasticSearchModel.create!(my_string: "Hey", my_int: 0, my_bool: true)
@@ -1282,10 +1311,77 @@ RSpec.describe ElasticsearchModels::Base do
         DummyElasticSearchModel.create!(my_string: "This is a test", my_int: 2)
         DummyElasticSearchModel.create!(my_string: "This is a test", my_int: 2)
         DummyElasticSearchModel.create!(my_string: "Hello", my_int: 3, my_bool: true)
-        DummyElasticSearchModel.create!(my_string: "Hello again", my_int: 4, my_bool: true)
+        DummyElasticSearchModel.create!(my_string: "Hello again", my_int: 4, my_bool: true, my_other_string: nil)
         DummyElasticSearchModel.create!(my_string: "How are you?", my_other_string: "found by fuzzy matching", my_int: 5)
-
+        DummyElasticSearchModel.create!(my_string: nil, my_other_string: nil)
         refresh_index
+      end
+
+      context "with top-level field nil" do
+        let(:missing) { "Missing field" }
+
+        it "populates empty top-level field with missing value" do
+          expected_values = { "my_string.keyword" => ["Hello", "This is a test", "Hello again", "Hey", "How are you?", "Missing field"] }
+          expect(distinct_values).to eq(expected_values)
+        end
+      end
+
+      context "with additional field nil" do
+        let(:additional_fields) { [{ field: "my_other_string.keyword", missing: "Missing additional field", order: { "_term" => "asc" } }] }
+
+        it "populates additional empty fields with missing value" do
+          expected_values = {
+            "my_string.keyword" => {
+              "Hello" => {
+                "my_other_string.keyword" => ["Missing additional field"]
+              },
+              "How are you?" => {
+                "my_other_string.keyword" => ["found by fuzzy matching"]
+              },
+              "This is a test" => {
+                "my_other_string.keyword" => ["Missing additional field"]
+              },
+              "Hey" => {
+                "my_other_string.keyword" => ["Missing additional field"]
+              },
+              "Hello again" => {
+                "my_other_string.keyword" => ["Missing additional field"]
+              }
+            }
+          }
+          expect(distinct_values).to eq(expected_values)
+        end
+      end
+
+      context "with both top-level and additional field nil" do
+        let(:missing) { "Missing field" }
+        let(:additional_fields) { [{ field: "my_other_string.keyword", missing: "Missing additional field" }] }
+
+        it "populates empty fields from all aggregations (top and lower levels) with missing value" do
+          expected_values = {
+            "my_string.keyword" => {
+              "This is a test" => {
+                "my_other_string.keyword" => ["Missing additional field"]
+              },
+              "How are you?" => {
+                "my_other_string.keyword" => ["found by fuzzy matching"]
+              },
+              "Hey" => {
+                "my_other_string.keyword" => ["Missing additional field"]
+              },
+              "Hello" => {
+                "my_other_string.keyword" => ["Missing additional field"]
+              },
+              "Hello again" => {
+                "my_other_string.keyword" => ["Missing additional field"]
+              },
+              "Missing field" => {
+                "my_other_string.keyword" => ["Missing additional field"]
+              }
+            }
+          }
+          expect(distinct_values).to eq(expected_values)
+        end
       end
 
       context "when field is not aggregateable" do
@@ -1355,7 +1451,7 @@ RSpec.describe ElasticsearchModels::Base do
           let(:additional_fields) { ["my_int", ""] }
 
           it "raises ArgumentError if any of the values provided are not strings" do
-            expect { distinct_values }.to raise_error(ArgumentError, "additional_fields must all be present Strings")
+            expect { distinct_values }.to raise_error(ArgumentError, "additional_fields must all be Strings or Hashes with a :field key")
           end
         end
 
@@ -1363,7 +1459,7 @@ RSpec.describe ElasticsearchModels::Base do
           let(:additional_fields) { ["my_int", 123] }
 
           it "raises ArgumentError if any of the values provided are not strings" do
-            expect { distinct_values }.to raise_error(ArgumentError, "additional_fields must all be present Strings")
+            expect { distinct_values }.to raise_error(ArgumentError, "additional_fields must all be Strings or Hashes with a :field key")
           end
         end
       end

@@ -5,7 +5,9 @@ module ElasticsearchModels
     class MatchCondition
       class << self
         def term_for(key, value)
-          if value.is_a?(Range)
+          if value.nil?
+            { bool: { must_not: { exists: { field: key } } } }
+          elsif value.is_a?(Range)
             range_condition(key, value)
           elsif value.is_a?(Hash)
             params = { key => value }

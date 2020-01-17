@@ -9,6 +9,6 @@ gem "hobo_support",         "2.0.1", git: "git@github.com:Invoca/hobosupport",  
 gem "large_text_field",              git: "git@github.com:Invoca/large_text_field.git",  ref: "2efc950395352bf8b7f45891122f6bc42b171526"
 
 group :development do
-  gem 'rubocop', '0.54.0', require: false
+  gem 'rubocop', '0.74.0', require: false
   gem 'rubocop-git', require: false
 end

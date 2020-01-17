@@ -67,10 +67,14 @@ module ElasticsearchModels
 
       def distinct_values(field, additional_fields: [], where: {}, **params)
         field.presence.is_a?(String) or raise ArgumentError, "field must be a present String"
-        additional_fields.all? { |f| f.presence.is_a?(String) } or raise ArgumentError, "additional_fields must all be present Strings"
+        additional_fields.is_a?(Array) or raise ArgumentError, "additional_fields must be an Array"
+        additional_fields.all? do |f|
+          f.presence.is_a?(String) || (f.is_a?(Hash) && f.key?(:field))
+        end or raise ArgumentError, "additional_fields must all be Strings or Hashes with a :field key"
+        additional_field_names = additional_fields.map { |f| f.is_a?(String) ? f : f[:field] }
 
         response = where(_aggs: { field: field, aggs: additional_fields.presence, **params }.compact, **where.merge(_size: 0))
-        distinct_values_response(response.aggregations, additional_fields: additional_fields)
+        distinct_values_response(response.aggregations, additional_field_names: additional_field_names)
       end
 
       def client_connection
@@ -116,12 +120,12 @@ module ElasticsearchModels
         Query::Builder.new(params_with_indices.merge(query_types: search_type)).search_params
       end
 
-      def distinct_values_response(aggregations, additional_fields: [])
+      def distinct_values_response(aggregations, additional_field_names: [])
         aggregations.each_with_object({}) do |(field, values), result|
           result[field] =
-            if additional_fields.present?
+            if additional_field_names.present?
               values["buckets"].build_hash do |item|
-                [item["key"], distinct_values_response(item & additional_fields)]
+                [item["key"], distinct_values_response(item & additional_field_names)]
               end
             else
               values["buckets"].map { |item| item["key"] }

@@ -1,6 +1,19 @@
 # ElasticsearchModels
 Model representation for Elasticsearch documents based on Aggregate
 
+
+## Working In This Repo
+When working and making changes in this repo it is required to...
+* Update the `README.md` relative to your changes (API examples are always recommended!).
+* Bump the gem version appropriately (see MAJOR.MINOR.PATCH summary below).
+* Add a corresponding version entry describing what is being Added, Changed, and or Removed in `CHANGELOG.md`.
+
+### MAJOR.MINOR.PATCH Summary (from https://semver.org/)
+Given a version number MAJOR.MINOR.PATCH, increment the:
+MAJOR version when you make incompatible API changes.
+MINOR version when you add functionality in a backwards compatible manner.
+PATCH version when you make backwards compatible bug fixes.
+
 ## Installation
 
 Add this line to your application's Gemfile:
@@ -119,6 +132,9 @@ Queries return a `ElasticsearchModels::QueryResponse` which will contain `raw_re
 # Query by elasticsearch document id
 DummyElasticSearchModel.where(_id: "1234567890")
 
+# Query by nil or missing attributes
+DummyElasticSearchModel.where(my_string: nil) 
+
 # Query by attributes that all must match
 DummyElasticSearchModel.where(my_string: "Hi")
 DummyElasticSearchModel.where(my_string: "Hi", my_int: 2)
@@ -171,6 +187,7 @@ String searching using the `_q` parameter is fuzzy by default (`*` on both ends 
 As well, search terms that include spaces will `AND` each term instead of the implicit `OR`
 
 e.g. `full text` search string will be converted to the following query string `(*full AND text*)`
+
 ```ruby
 # Query by full text string searching
 DummyElasticSearchModel.where(_q: "Hello")
@@ -276,6 +293,7 @@ Supported Aggregation query params:
 * `order`: The ordering for the response
 * `partitions`: The current partition to query in (requires `num_partitions` if set)
 * `num_partitions`: The amount of partitions to bucket results into (requires `partition` if set)
+* `missing`: The default value to be used for a missing field
 
 ```ruby
 # Aggregate on a single term
@@ -296,6 +314,9 @@ DummyElasticSearchModel.where(_aggs: { field: "my_string.keyword", order: { "_ke
 
 # Aggregate on a single field with multiple ordering options
 DummyElasticSearchModel.where(_aggs: { field: "my_string.keyword", order: ["_key", { "_count" => "asc" }] })
+
+# Aggregate on a single field while populating missing fields with the provided default value
+DummyElasticSearchModel.where(_aggs: { field: "my_string.keyword", missing: "N/A" }) 
 
 # Aggregate on a single field with sub-aggregations (supports infinite nestings)
 DummyElasticSearchModel.where(_aggs: { field: "my_string.keyword", aggs: "my_id" })
@@ -340,6 +361,9 @@ DummyElasticSearchModel.distinct_values("my_string.keyword", partition: 1, num_p
 # Distinct Values with Additional Fields
 DummyElasticSearchModel.distinct_values("my_int", additional_fields: ["my_string"])
 DummyElasticSearchModel.distinct_values("my_int", additional_fields: ["my_int", "my_string"])
+
+# Distinct Values with Additional Fields and Missing Fields
+DummyElasticSearchModel.distinct_values("my_int", missing: 0, additional_fields: [{ field: "my_string", missing: "N/A" }]) 
 ```
 
 ### Handling Model Name Changes
