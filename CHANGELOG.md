@@ -1,5 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file
+
+## [1.0.1] - 2020-03-02
+### Added
+- Documentation for best practices for using/querying `aggregate_has_many` fields.
+- Test coverage for querying `aggregate_has_many` fields.
+
 ## [1.0.0] - 2020-01-13
 ### Added
 - Added initial entry in ChangeLog (see README at this point for gem details)

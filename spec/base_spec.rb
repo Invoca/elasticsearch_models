@@ -58,6 +58,7 @@ RSpec.describe ElasticsearchModels::Base do
     attribute :my_nested_class, NestedAggregateAttribute
 
     aggregate_has_many :nested_aggregate_classes, NestedAggregateAttribute
+    aggregate_has_many :names, :string
 
     belongs_to :dummy_owner, class_name: DummyOwnerClass
 
@@ -148,6 +149,7 @@ RSpec.describe ElasticsearchModels::Base do
           "my_enum"                  => nil,
           "my_decimal"               => nil,
           "my_nested_class"          => nil,
+          "names"                    => [],
           "nested_aggregate_classes" => [],
           "dummy_owner_id"           => nil,
           "data_schema_version"      => "1.0",
@@ -221,6 +223,7 @@ RSpec.describe ElasticsearchModels::Base do
           "my_enum"                  => nil,
           "my_decimal"               => nil,
           "my_nested_class"          => nil,
+          "names"                    => [],
           "nested_aggregate_classes" => [],
           "dummy_owner_id"           => nil,
           "data_schema_version"      => nil,
@@ -658,6 +661,28 @@ RSpec.describe ElasticsearchModels::Base do
         expect(query_response.models.count).to eq(1)
         expect(query_response.models.first.class.name).to eq("DummySub1BModel")
         expect(query_response.models.first.my_other_string).to eq("Goodbye")
+      end
+
+      context "aggregate_has_many" do
+        before(:each) do
+          DummyElasticSearchModel.create!(my_string: "Hello", names: ["John"])
+          DummyElasticSearchModel.create!(my_string: "Hello2", names: ["Bill"])
+          DummyElasticSearchModel.create!(my_string: "Hello3", names: ["Alex"])
+          DummyElasticSearchModel.create!(my_string: "Hello3", names: ["Alex", "Bill"])
+          refresh_index
+        end
+
+        it "returns models that have the expected value in the aggregate_has_many field" do
+          query_response = DummyElasticSearchModel.where(names: "Alex")
+          expect(query_response.models.count).to eq(2)
+          expect(query_response.models.map(&:names).sort).to eq([["Alex"], ["Alex", "Bill"]])
+        end
+
+        it "returns models that at least 1 of the expected values in the aggregate_has_many field (treated as an 'OR')" do
+          query_response = DummyElasticSearchModel.where(names: ["John", "Bill"])
+          expect(query_response.models.count).to eq(3)
+          expect(query_response.models.map(&:names).sort).to eq([["Alex", "Bill"], ["Bill"], ["John"]])
+        end
       end
 
       context "ignore unavailable indexes" do
