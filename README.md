@@ -80,6 +80,16 @@ end
   DummyElasticSearchModel.create!(my_string: "Hi", my_nested_class: DummyElasticSearchModel::NestedClass.new(nested_int_field: 5, nested_hash_field: { "a" => 1, "b" => 2 }))
 ```
 
+#### `aggregate_has_many`
+
+Important notes when working with `aggregate_has_many`.
+
+* Elasticsearch does not support objects nested in arrays well (in regards to type mapping). Use `aggregate_has_many` for nested classes at your own discretion.
+* The field mapping in Elasticsearch for the `aggregate_has_many` will be the type of the object. E.g. for `aggregate_has_many :names, :string` the Elasticsearch mapping will be `name: String`.
+  * Elasticsearch fields can have values [`nil`, `value1`, `[value2, value3]`], where `value1`, `value2`, and `value3` are all of the same type.
+* Querying on `where(names: "John")` will return all models that include `"John"` in `names`.
+* Querying on `where(names: ["John", "Bill"])` will be an `"||"` (OR) query where the models only needs to contain either `"John"` or `"Bill"` in `names`.
+
 ### Newing a model (without inserting)
 Just like active record, creating a new model will not save it to the database, but you can call save on the model to write it.
 
@@ -133,7 +143,7 @@ Queries return a `ElasticsearchModels::QueryResponse` which will contain `raw_re
 DummyElasticSearchModel.where(_id: "1234567890")
 
 # Query by nil or missing attributes
-DummyElasticSearchModel.where(my_string: nil) 
+DummyElasticSearchModel.where(my_string: nil)
 
 # Query by attributes that all must match
 DummyElasticSearchModel.where(my_string: "Hi")
@@ -316,7 +326,7 @@ DummyElasticSearchModel.where(_aggs: { field: "my_string.keyword", order: { "_ke
 DummyElasticSearchModel.where(_aggs: { field: "my_string.keyword", order: ["_key", { "_count" => "asc" }] })
 
 # Aggregate on a single field while populating missing fields with the provided default value
-DummyElasticSearchModel.where(_aggs: { field: "my_string.keyword", missing: "N/A" }) 
+DummyElasticSearchModel.where(_aggs: { field: "my_string.keyword", missing: "N/A" })
 
 # Aggregate on a single field with sub-aggregations (supports infinite nestings)
 DummyElasticSearchModel.where(_aggs: { field: "my_string.keyword", aggs: "my_id" })
@@ -363,7 +373,7 @@ DummyElasticSearchModel.distinct_values("my_int", additional_fields: ["my_string
 DummyElasticSearchModel.distinct_values("my_int", additional_fields: ["my_int", "my_string"])
 
 # Distinct Values with Additional Fields and Missing Fields
-DummyElasticSearchModel.distinct_values("my_int", missing: 0, additional_fields: [{ field: "my_string", missing: "N/A" }]) 
+DummyElasticSearchModel.distinct_values("my_int", missing: 0, additional_fields: [{ field: "my_string", missing: "N/A" }])
 ```
 
 ### Handling Model Name Changes
