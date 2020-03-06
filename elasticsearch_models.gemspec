@@ -20,7 +20,7 @@ Gem::Specification.new do |s|
 
   s.add_dependency "activesupport"
   s.add_dependency 'elasticsearch', '6.1.0'
-  s.add_dependency "hobo_support",     "2.0.1"
+  s.add_dependency "hobo_support",     "~> 2.2"
   s.add_dependency "large_text_field", "~> 0.2"
 
   s.add_development_dependency "bundler", "~> 1.16"
