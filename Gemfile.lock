@@ -1,12 +1,12 @@
 GIT
   remote: git@github.com:Invoca/aggregate.git
-  revision: 6fc589319401c06d0c9dd33af25c8731bd9c1f7c
-  ref: 6fc589319401c06d0c9dd33af25c8731bd9c1f7c
+  revision: 55ba766841b4ce0f0bf853c04dbb1d677ebbb442
+  ref: 55ba766841b4ce0f0bf853c04dbb1d677ebbb442
   specs:
-    aggregate (1.2)
+    aggregate (2.0.0)
       activerecord (~> 4.0)
       encryptor (~> 3.0)
-      hobo_support (~> 2.2)
+      invoca-utils (~> 0.3)
       large_text_field (~> 0.2)
 
 PATH
@@ -85,6 +85,7 @@ GEM
       rails (~> 4.2.6)
     i18n (0.9.5)
       concurrent-ruby (~> 1.0)
+    invoca-utils (0.3.0)
     jaro_winkler (1.5.4)
     large_text_field (0.3.0)
       hobo_support (~> 2.2)
@@ -183,7 +184,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  aggregate (~> 1.2)!
+  aggregate (~> 2.0)!
   bundler (~> 1.16)
   elasticsearch-extensions
   elasticsearch_models!
