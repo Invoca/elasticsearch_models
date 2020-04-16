@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file
 
+## [2.0.0] - 2020-04-29
+### Changed
+- Depend on `aggregate` version `~> 2.0`, which defaults to storing all times with millisecond precision.
+- When a `Time` is passed in to a `QueryString` or `MatchCondition`, format it to use 3 decimal places (milliseconds) to guarantee it is compatible with millisecond timestamps stored in ES
+
 ## [1.0.2] - 2020-04-27
 ### Added
 - Add `where(_ignore_unavailable: true)` example to README
