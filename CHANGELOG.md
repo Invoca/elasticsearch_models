@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file
 
+## [1.1.0] - 2020-04-16
+### Added
+- When a `Time` is passed in to a `QueryString` or `MatchCondition`, format it to use 3 decimal places (milliseconds) to guarantee it is compatible with millisecond timestamps stored in ES
+
 ## [1.0.1] - 2020-03-02
 ### Added
 - Documentation for best practices for using/querying `aggregate_has_many` fields.
