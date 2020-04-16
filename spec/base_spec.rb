@@ -333,7 +333,7 @@ RSpec.describe ElasticsearchModels::Base do
         it "stores datetime in UTC" do
           time = Time.at(1_544_657_724)
           DummyElasticSearchModel.create!(my_string: "Hello", my_time: time)
-          expect(refresh_and_find_search_hit["_source"]).to eq(@default_fields.merge("my_time" => "2018-12-12T23:35:24Z"))
+          expect(refresh_and_find_search_hit["_source"]).to eq(@default_fields.merge("my_time" => "2018-12-12T23:35:24.000Z"))
         end
 
         it "stores float" do
@@ -513,7 +513,7 @@ RSpec.describe ElasticsearchModels::Base do
           "my_required"       => "Required",
           "my_bool"           => true,
           "my_hash"           => "{\"first_layer\":{\"nested_layer\":1}}",
-          "my_time"           => current_time.utc.iso8601,
+          "my_time"           => current_time.utc.iso8601(3),
           "my_float"          => 1.1,
           "my_enum"           => "Yes",
           "my_nested_class" => {

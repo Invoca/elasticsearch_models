@@ -113,7 +113,7 @@ RSpec.describe ElasticsearchModels::Query::QueryString do
           max_time = time + 300
           min_time..max_time
         end
-        let(:expected_term) { "[2018-12-27T20:05:00Z TO 2018-12-27T20:15:00Z]" }
+        let(:expected_term) { "[2018-12-27T20:05:00.000Z TO 2018-12-27T20:15:00.000Z]" }
 
         it_behaves_like "a search term"
       end
