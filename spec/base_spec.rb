@@ -331,9 +331,9 @@ RSpec.describe ElasticsearchModels::Base do
         end
 
         it "stores datetime in UTC" do
-          time = Time.at(1_544_657_724)
+          time = Time.at(1_544_657_724.1234)
           DummyElasticSearchModel.create!(my_string: "Hello", my_time: time)
-          expect(refresh_and_find_search_hit["_source"]).to eq(@default_fields.merge("my_time" => "2018-12-12T23:35:24.000Z"))
+          expect(refresh_and_find_search_hit["_source"]).to eq(@default_fields.merge("my_time" => "2018-12-12T23:35:24.123Z"))
         end
 
         it "stores float" do
