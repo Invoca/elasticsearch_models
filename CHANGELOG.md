@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project will be documented in this file
 
-## [1.1.0] - 2020-04-16
+## [2.0.0] - 2020-04-16
 ### Changed
 - Depend on `aggregate` version `~> 2.0`, which defaults to storing all times with millisecond precision.
 ### Added
