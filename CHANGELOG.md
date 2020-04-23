@@ -3,9 +3,9 @@ All notable changes to this project will be documented in this file
 
 ## [2.0.0] - 2020-04-16
 ### Changed
-- Depend on `aggregate` version `~> 2.0`, which defaults to storing all times with millisecond precision.
-### Added
-- When a `Time` is passed in to a `QueryString` or `MatchCondition`, format it to use 3 decimal places (milliseconds) to guarantee it is compatible with millisecond timestamps stored in ES
+- Depend on `aggregate` version `~> 1.3`, which allows a `datetime_formatter` to be specified.
+- Use the `datetime_formatter` to specify millisecond precision when formatting aggregate datetimes to be stored in ES.
+- When a `Time` is passed in to a `QueryString` or `MatchCondition`, use the same format as specified by `datetime_formatter` to guarantee it is compatible the timestamps stored in ES.
 
 ## [1.0.1] - 2020-03-02
 ### Added
