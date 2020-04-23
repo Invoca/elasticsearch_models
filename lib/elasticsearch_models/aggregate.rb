@@ -10,6 +10,14 @@ module ElasticsearchModels
       def aggregate_db_storage_type
         :elasticsearch
       end
+
+      def datetime_formatter
+        method :format_datetime
+      end
+
+      def format_datetime(datetime)
+        datetime.utc.iso8601(3)
+      end
     end
   end
 end

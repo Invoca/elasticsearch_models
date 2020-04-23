@@ -55,7 +55,7 @@ module ElasticsearchModels
           when Date
             range_value.iso8601
           when Time
-            range_value.utc.iso8601(3)
+            ElasticsearchModels::Aggregate.datetime_formatter.call(range_value)
           else
             range_value
           end

@@ -38,7 +38,7 @@ module ElasticsearchModels
 
         def format_range_value(range_value)
           if range_value.is_a?(Time)
-            range_value.utc.iso8601(3)
+            ElasticsearchModels::Aggregate.datetime_formatter.call(range_value)
           else
             range_value
           end
