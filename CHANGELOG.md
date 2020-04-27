@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file
 
+## [1.0.2] - 2020-04-27
+### Added
+- Add `where(_ignore_unavailable: true)` example to README
+
 ## [1.0.1] - 2020-03-02
 ### Added
 - Documentation for best practices for using/querying `aggregate_has_many` fields.

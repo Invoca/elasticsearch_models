@@ -250,7 +250,9 @@ Not specifying the indices in a query will use the index name returned from `ind
 
 The intended use case for this is to allow for querying across multiple indices that are sharded by time.
 
-Note: Names for indices are arbitrary: passing in an index_name into `_indices` that doesn't exist will return 0 documents.
+Use the `:_ignore_unavailable` option to prevent errors from raising if attempting to query an index that doesn't exist.
+
+Note: Names for indices are arbitrary: When using `_ignore_unavailable` and passing in an index_name into `_indices` that doesn't exist, 0 documents will be returned.
 ```ruby
 class DummyDailyIndexModel < DummyElasticSearchModel
   def index_name
@@ -284,8 +286,11 @@ DummyDailyIndexModel.where(_indices: ["dummy_daily_index.19.01.04", "dummy_daily
 DummyDailyIndexModel.where(_indices: ["dummy_daily_index.19.01.04", "dummy_daily_index.19.01.05", "dummy_daily_index.19.01.06"]).models
 => Returns [a, b, c]
 
+DummyDailyIndexModel.where(_indices: "wrong_index_name", _ignore_unavailable: true).models
+=> Returns [] # Does not raise for a non-existent index because of _ignore_unavailable: true
+
 DummyDailyIndexModel.where(_indices: "wrong_index_name").models
-=> []
+=> Raises an error # Will raise an error since no index exists with name "wrong_index_name"
 ```
 
 #### Querying with Aggregations
