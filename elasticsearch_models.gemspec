@@ -16,7 +16,7 @@ Gem::Specification.new do |s|
   s.email       = "orabani@invoca.com"
   s.files       = Dir["lib/**/*"]
   s.homepage    = "http://github.com/invoca/elasticsearch_models"
-  s.metadata    = { "source_code_uri" => "https://github.com/Invoca/elasticsearch_models" }
+  s.metadata    = { "allowed_push_host" => "https://gem.fury.io/invoca" }
 
   s.add_dependency "activesupport"
   s.add_dependency 'aggregate', '~> 2.0'
