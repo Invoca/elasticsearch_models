@@ -55,7 +55,8 @@ module ElasticsearchModels
           when Date
             range_value.iso8601
           when Time
-            range_value.utc.iso8601
+            # This must, unfortunately, remain consistent with the formatting used in Aggregate::Attribute::DateTime#store
+            range_value.utc.iso8601(3)
           else
             range_value
           end

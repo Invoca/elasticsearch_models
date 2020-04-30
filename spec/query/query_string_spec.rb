@@ -108,12 +108,12 @@ RSpec.describe ElasticsearchModels::Query::QueryString do
 
       context "values are time objects" do
         let(:condition) do
-          time = Time.utc(2018, 12, 27, 20, 10).in_time_zone("Pacific Time (US & Canada)")
+          time = Time.utc(2018, 12, 27, 20, 10, 0.1234).in_time_zone("Pacific Time (US & Canada)")
           min_time = time - 300
           max_time = time + 300
           min_time..max_time
         end
-        let(:expected_term) { "[2018-12-27T20:05:00Z TO 2018-12-27T20:15:00Z]" }
+        let(:expected_term) { "[2018-12-27T20:05:00.123Z TO 2018-12-27T20:15:00.123Z]" }
 
         it_behaves_like "a search term"
       end

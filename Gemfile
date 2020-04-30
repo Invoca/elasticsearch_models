@@ -4,7 +4,7 @@ source "https://rubygems.org"
 
 gemspec
 
-gem "aggregate",         "~> 1.2",   git: "git@github.com:Invoca/aggregate.git",         ref: "6fc589319401c06d0c9dd33af25c8731bd9c1f7c"
+gem "aggregate",         "~> 2.0",   git: "git@github.com:Invoca/aggregate.git",         ref: "55ba766841b4ce0f0bf853c04dbb1d677ebbb442"
 
 group :development do
   gem 'rubocop', '0.74.0', require: false

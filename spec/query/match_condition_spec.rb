@@ -33,14 +33,14 @@ RSpec.describe ElasticsearchModels::Query::MatchCondition do
       end
 
       it "converts time to iso8601 and returns range" do
-        time = Time.utc(2018, 12, 27, 20, 10).in_time_zone("Pacific Time (US & Canada)")
+        time = Time.utc(2018, 12, 27, 20, 10, 0.1234).in_time_zone("Pacific Time (US & Canada)")
         expect(time.iso8601).to eq("2018-12-27T12:10:00-08:00")
         expect(time.zone).to eq("PST")
 
         min_time = time - 300
         max_time = time + 300
 
-        expected_term = { range: { a: { "gte" => "2018-12-27T20:05:00Z", "lte" => "2018-12-27T20:15:00Z" } } }
+        expected_term = { range: { a: { "gte" => "2018-12-27T20:05:00.123Z", "lte" => "2018-12-27T20:15:00.123Z" } } }
         expect(ElasticsearchModels::Query::MatchCondition.term_for(:a, (min_time..max_time))).to eq(expected_term)
       end
     end
