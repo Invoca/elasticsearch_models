@@ -4,7 +4,7 @@ source "https://rubygems.org"
 
 gemspec
 
-gem "aggregate", "~> 2.0", source: 'https://gem.fury.io/invoca'
+gem "aggregate", source: 'https://gem.fury.io/invoca'
 
 group :development do
   gem 'rubocop', '0.74.0', require: false

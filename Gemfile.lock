@@ -180,7 +180,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  aggregate (~> 2.0)!
+  aggregate!
   bundler (~> 1.16)
   elasticsearch-extensions
   elasticsearch_models!
