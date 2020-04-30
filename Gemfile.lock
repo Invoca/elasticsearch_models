@@ -1,25 +1,16 @@
-GIT
-  remote: git@github.com:Invoca/aggregate.git
-  revision: 55ba766841b4ce0f0bf853c04dbb1d677ebbb442
-  ref: 55ba766841b4ce0f0bf853c04dbb1d677ebbb442
-  specs:
-    aggregate (2.0.0)
-      activerecord (~> 4.0)
-      encryptor (~> 3.0)
-      invoca-utils (~> 0.3)
-      large_text_field (~> 0.2)
-
 PATH
   remote: .
   specs:
     elasticsearch_models (2.0.0)
       activesupport
+      aggregate (~> 2.0)
       elasticsearch (= 6.1.0)
       hobo_support (~> 2.0)
       large_text_field (~> 0.2)
 
 GEM
   remote: https://rubygems.org/
+  remote: https://gem.fury.io/invoca/
   specs:
     actionmailer (4.2.11.1)
       actionpack (= 4.2.11.1)
@@ -55,6 +46,11 @@ GEM
       minitest (~> 5.1)
       thread_safe (~> 0.3, >= 0.3.4)
       tzinfo (~> 1.1)
+    aggregate (2.0.0)
+      activerecord (~> 4.0)
+      encryptor (~> 3.0)
+      invoca-utils (~> 0.3)
+      large_text_field (~> 0.2)
     ansi (1.5.0)
     arel (6.0.4)
     ast (2.4.0)
@@ -184,7 +180,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  aggregate (~> 2.0)!
+  aggregate!
   bundler (~> 1.16)
   elasticsearch-extensions
   elasticsearch_models!
