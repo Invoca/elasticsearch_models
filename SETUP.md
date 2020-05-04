@@ -22,7 +22,7 @@ Java HotSpot(TM) 64-Bit Server VM (build 25.192-b12, mixed mode)
 Install Java8 if not installed already
 
 ```shell
-brew cask install homebrew/cask-versions/java8
+brew cask install homebrew/cask-versions/adoptopenjdk8
 ```
 
 Now install Elasticsearch
