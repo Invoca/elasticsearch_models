@@ -4,7 +4,7 @@ Inspired by [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 Note: This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.0.1] - Unreleased
+## [2.0.1] - 2020-05-04
 ### Changed
 - Replace hobo_support with invoca-utils
 
@@ -31,7 +31,7 @@ Note: This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0
 ### Changed
 - Updated ruby version from `2.4.2` to `2.6.1`
 
-[2.0.1]: https://github.com/Invoca/boolean_expression/compare/v2.0.0...v2.0.1
-[2.0.0]: https://github.com/Invoca/boolean_expression/compare/v1.0.2...v2.0.0
-[1.0.2]: https://github.com/Invoca/boolean_expression/compare/v1.0.1...v1.0.2
-[1.0.1]: https://github.com/Invoca/boolean_expression/compare/v1.0.0...v1.0.1
+[2.0.1]: https://github.com/Invoca/elasticsearch_models/compare/v2.0.0...v2.0.1
+[2.0.0]: https://github.com/Invoca/elasticsearch_models/compare/v1.0.2...v2.0.0
+[1.0.2]: https://github.com/Invoca/elasticsearch_models/compare/v1.0.1...v1.0.2
+[1.0.1]: https://github.com/Invoca/elasticsearch_models/compare/v1.0.0...v1.0.1
