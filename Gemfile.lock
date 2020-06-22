@@ -30,7 +30,7 @@ GIT
 PATH
   remote: .
   specs:
-    elasticsearch_models (1.0.0)
+    elasticsearch_models (1.0.0.rails.5)
       activesupport
       elasticsearch (= 6.1.0)
       large_text_field (~> 0.2)
