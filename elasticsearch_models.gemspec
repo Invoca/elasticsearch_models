@@ -20,12 +20,5 @@ Gem::Specification.new do |s|
 
   s.add_dependency "activesupport"
   s.add_dependency 'elasticsearch', '6.1.0'
-  s.add_dependency "large_text_field", "~> 0.2"
-
-  s.add_development_dependency "bundler", "~> 1.17"
-  s.add_development_dependency "elasticsearch-extensions"
-  s.add_development_dependency "pry"
-  s.add_development_dependency "pry-byebug"
-  s.add_development_dependency "rake"
-  s.add_development_dependency "rspec", "~> 3.0"
+  s.add_dependency "large_text_field", "~> 1.0"
 end
