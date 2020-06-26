@@ -38,7 +38,7 @@ module ElasticsearchClusterSpecHelper
 
   included do
     before(:all) do
-      if ELASTICSEARCH_TEST_PORT == 9250 && ELASTICSEARCH_TEST_LOCALHOST == '127.0.0.1'
+      if ELASTICSEARCH_TEST_PORT == 9250 || ELASTICSEARCH_TEST_LOCALHOST != '127.0.0.1'
         Elasticsearch::Extensions::Test::Cluster.start(CLUSTER_COMMANDS.merge(port: ELASTICSEARCH_TEST_PORT, number_of_nodes: 1, timeout: 20))
       end
 
@@ -46,7 +46,7 @@ module ElasticsearchClusterSpecHelper
     end
 
     after(:all) do
-      if ELASTICSEARCH_TEST_PORT == 9250 && ELASTICSEARCH_TEST_LOCALHOST == '127.0.0.1'
+      if ELASTICSEARCH_TEST_PORT == 9250 || ELASTICSEARCH_TEST_LOCALHOST != '127.0.0.1'
         Elasticsearch::Extensions::Test::Cluster.stop(CLUSTER_COMMANDS.merge(port: ELASTICSEARCH_TEST_PORT))
       end
     end
