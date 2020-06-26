@@ -1,0 +1,52 @@
+#!/usr/bin/groovy
+
+@Library('jenkins-pipeline@v0.4.4')
+
+def setGithubStatus(String name, String description, String status) {
+  gitHubStatus([
+    repoSlug:    'Invoca/elasticsearch_models',
+    sha:         env.GIT_COMMIT,
+    description: description,
+    context:     name,
+    targetURL:   env.RUN_DISPLAY_URL,
+    token:       env.GITHUB_TOKEN,
+    status:      status
+  ])
+}
+
+pipeline {
+  agent {
+    kubernetes {
+      defaultContainer 'ruby'
+      yamlFile '.jenkins/ruby_build_pod.yml'
+    }
+  }
+
+  environment {
+    GITHUB_TOKEN         = credentials('github_token')
+    BUNDLE_GEM__FURY__IO = credentials('gemfury_deploy_token')
+  }
+
+  stages {
+    stage("Setup") {
+      steps {
+        setGithubStatus('clean-build', 'Running unit tests', 'pending')
+        sh 'bundle install'
+      }
+    }
+
+    stage("Unit Tests") {
+      environment {
+        JUNIT_OUTPUT            = 'spec/reports/rspec.xml'
+        ELASTICSEARCH_TEST_HOST = 'elasticsearch'
+      }
+      steps { sh 'bundle exec rspec' }
+      post { always { junit JUNIT_OUTPUT } }
+    }
+  }
+
+  post {
+    success { setGithubStatus('clean-build', 'Passed all unit tests!', 'success') }
+    failure { setGithubStatus('clean-build', 'Failure during unit tests!', 'failure') }
+  }
+}
