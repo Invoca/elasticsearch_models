@@ -39,6 +39,7 @@ pipeline {
       environment {
         JUNIT_OUTPUT            = 'spec/reports/rspec.xml'
         ELASTICSEARCH_TEST_HOST = 'elasticsearch'
+        ELASTICSEARCH_TEST_PORT = '9200'
       }
       steps { sh 'bundle exec rspec' }
       post { always { junit JUNIT_OUTPUT } }
