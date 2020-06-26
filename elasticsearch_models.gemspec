@@ -19,8 +19,8 @@ Gem::Specification.new do |s|
   s.metadata    = { "allowed_push_host" => "https://gem.fury.io/invoca" }
 
   s.add_dependency "activesupport"
-  s.add_dependency 'aggregate', '~> 2.0'
-  s.add_dependency 'elasticsearch', '~> 6.8'
-  s.add_dependency 'invoca-utils',  '~> 0.3'
+  s.add_dependency 'aggregate',        '~> 2.0'
+  s.add_dependency 'elasticsearch',    '~> 6.8'
+  s.add_dependency 'invoca-utils',     '~> 0.3'
   s.add_dependency "large_text_field", "~> 0.3"
 end
