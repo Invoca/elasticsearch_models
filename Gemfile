@@ -13,5 +13,6 @@ gem 'pry'
 gem 'pry-byebug'
 gem 'rake', '~> 10.0'
 gem 'rspec', '~> 3.0'
+gem "rspec_junit_formatter", "~> 0.4"
 gem 'rubocop', '0.74.0', require: false
 gem 'rubocop-git', require: false
