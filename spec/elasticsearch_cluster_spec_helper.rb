@@ -8,7 +8,7 @@ module ElasticsearchClusterSpecHelper
   # include Minitest::Hooks
 
   ELASTICSEARCH_TEST_INDEX     = "test_example_index"
-  ELASTICSEARCH_TEST_LOCALHOST = "127.0.0.1"
+  ELASTICSEARCH_TEST_LOCALHOST = ENV["ELASTICSEARCH_TEST_HOST"].presence || "127.0.0.1"
   ELASTICSEARCH_TEST_PORT      = ENV["ELASTICSEARCH_TEST_PORT"]&.to_i || 9250
 
   # If using Minitest, use Minitest::Hooks.
@@ -38,7 +38,7 @@ module ElasticsearchClusterSpecHelper
 
   included do
     before(:all) do
-      if ELASTICSEARCH_TEST_PORT == 9250
+      if ELASTICSEARCH_TEST_PORT == 9250 && ELASTICSEARCH_TEST_LOCALHOST == '127.0.0.1'
         Elasticsearch::Extensions::Test::Cluster.start(CLUSTER_COMMANDS.merge(port: ELASTICSEARCH_TEST_PORT, number_of_nodes: 1, timeout: 20))
       end
 
@@ -46,7 +46,7 @@ module ElasticsearchClusterSpecHelper
     end
 
     after(:all) do
-      if ELASTICSEARCH_TEST_PORT == 9250
+      if ELASTICSEARCH_TEST_PORT == 9250 && ELASTICSEARCH_TEST_LOCALHOST == '127.0.0.1'
         Elasticsearch::Extensions::Test::Cluster.stop(CLUSTER_COMMANDS.merge(port: ELASTICSEARCH_TEST_PORT))
       end
     end
