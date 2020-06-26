@@ -6,6 +6,7 @@ source 'https://gem.fury.io/invoca'
 gemspec
 
 gem 'aggregate', source: 'https://gem.fury.io/invoca'
+gem 'appraisal'
 gem 'bundler', '~> 1.16'
 gem 'elasticsearch-extensions'
 gem 'pry'
