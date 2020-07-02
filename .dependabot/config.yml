@@ -3,7 +3,7 @@ version: 1
 update_configs:
   - package_manager: "ruby:bundler"
     directory: "/"
-    update_schedule: "live"
+    update_schedule: "weekly"
     version_requirement_updates: "off"
     commit_message:
       prefix: "No-Jira"
