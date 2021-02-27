@@ -73,7 +73,7 @@ GEM
       invoca-utils (~> 0.3)
       large_text_field (~> 1.0)
     ansi (1.5.0)
-    appraisal (2.3.0)
+    appraisal (2.4.0)
       bundler
       rake
       thor (>= 0.14.0)
@@ -197,7 +197,7 @@ GEM
       actionpack (>= 4.0)
       activesupport (>= 4.0)
       sprockets (>= 3.0.0)
-    thor (1.0.1)
+    thor (1.1.0)
     thread_safe (0.3.6)
     tzinfo (1.2.7)
       thread_safe (~> 0.1)
