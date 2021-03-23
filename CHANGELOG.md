@@ -4,6 +4,10 @@ Inspired by [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 Note: This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2021-03-23
+### Added
+- Added new `read_client_connection` and `write_client_connection` to be able to define two different settings for connections on reads and writes.
+
 ## [2.1.0] - 2020-07-02
 ### Added
 - Added support for rails 5 and 6
@@ -35,6 +39,7 @@ Note: This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0
 ### Changed
 - Updated ruby version from `2.4.2` to `2.6.1`
 
+[2.2.0]: https://github.com/Invoca/elasticsearch_models/compare/v2.1.0...v2.2.0
 [2.1.0]: https://github.com/Invoca/elasticsearch_models/compare/v2.0.1...v2.1.0
 [2.0.1]: https://github.com/Invoca/elasticsearch_models/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/Invoca/elasticsearch_models/compare/v1.0.2...v2.0.0
