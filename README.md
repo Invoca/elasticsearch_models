@@ -410,3 +410,23 @@ class ShinyNewModel < ElasticsearchModels::Base
   end
 end
 ```
+
+### Client Connections for Reads and Writes
+If you want to have different settings for your client connections based on whether you are writing to or reading from Elasticsearch, 
+you can set that up by defining the following two methods: `write_client_connection` and `read_client_connection`. By default these two
+methods will return the base `client_connection` method unless overwritten. If you have only defined one of these two methods,
+you will also need to define `client_connection`.
+
+```ruby
+class DummyElasticSearchModel < ElasticsearchModels::Base
+  class << self
+    def read_client_connection
+      @client_connection ||= Elasticsearch::Client.new(host: "127.0.0.1", port: 9250, scheme: "http")
+    end
+
+    def write_client_connection
+      @client_connection ||= Elasticsearch::Client.new(host: "127.0.0.1", port: 9250, scheme: "http", request_timeout: 10)
+    end
+  end
+end
+```

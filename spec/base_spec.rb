@@ -109,6 +109,18 @@ RSpec.describe ElasticsearchModels::Base do
 
   class DummyReplacedModel < DummyElasticSearchModel; end
 
+  class DummyDiffClientConnectionModel < DummyElasticSearchModel
+    class << self
+      def read_client_connection
+        @read_client_connection ||= Elasticsearch::Client.new(host: "127.0.0.1", port: ENV["ELASTICSEARCH_TEST_PORT"] || 9250, scheme: "http", request_timeout: 10)
+      end
+
+      def write_client_connection
+        @write_client_connection ||= Elasticsearch::Client.new(host: "127.0.0.1", port: ENV["ELASTICSEARCH_TEST_PORT"] || 9250, scheme: "http", request_timeout: 5)
+      end
+    end
+  end
+
   context "DummyElasticSearchModel" do
     it "inherits from ElasticsearchModels::Base and Aggregate::Base" do
       dummy_model = DummyElasticSearchModel.create!(my_string: "Hello")
@@ -123,6 +135,34 @@ RSpec.describe ElasticsearchModels::Base do
 
       it "raises NotImplementedError if not defined" do
         expect { ElasticsearchModels::Base.new.index_name }.to raise_error(NotImplementedError)
+      end
+    end
+
+    context "client connections" do
+      context "#client_connection" do
+        it "raises NotImplementedError if not defined" do
+          expect { ElasticsearchModels::Base.client_connection }.to raise_error(NotImplementedError)
+        end
+      end
+
+      context "#read_client_connection" do
+        it "returns the client defined in the method instead of the base client_connection" do
+          expect(DummyDiffClientConnectionModel.read_client_connection).to_not eq(DummyDiffClientConnectionModel.client_connection)
+        end
+
+        it "returns client_connection if not defined" do
+          expect(DummyElasticSearchModel.read_client_connection).to eq(DummyElasticSearchModel.client_connection)
+        end
+      end
+
+      context "#write_client_connection" do
+        it "returns the client defined in the method instead of the base client_connection" do
+          expect(DummyDiffClientConnectionModel.write_client_connection).to_not eq(DummyDiffClientConnectionModel.client_connection)
+        end
+
+        it "returns client_connection if not defined" do
+          expect(DummyElasticSearchModel.write_client_connection).to eq(DummyElasticSearchModel.client_connection)
+        end
       end
     end
 
@@ -268,7 +308,7 @@ RSpec.describe ElasticsearchModels::Base do
 
       it "raises an exception if the elasticsearch insert is not successful on any shard" do
         dummy_connection = Elasticsearch::Client.new
-        expect(DummyElasticSearchModel).to receive(:client_connection).and_return(dummy_connection)
+        expect(DummyElasticSearchModel).to receive(:write_client_connection).and_return(dummy_connection)
 
         error_response = {
           "_shards" => {
@@ -569,7 +609,7 @@ RSpec.describe ElasticsearchModels::Base do
         dummy_connection = Elasticsearch::Client.new
         dummy_model = DummyElasticSearchModel.new(my_string: "Hello")
 
-        expect(DummyElasticSearchModel).to receive(:client_connection).and_return(dummy_connection)
+        expect(DummyElasticSearchModel).to receive(:write_client_connection).and_return(dummy_connection)
 
         error_response = { "_shards" => { "total" => 2, "successful" => 0, "failed" => 1 } }
         expect(dummy_connection).to receive(:index).and_return(error_response)
@@ -592,6 +632,11 @@ RSpec.describe ElasticsearchModels::Base do
     end
 
     context ".where" do
+      it "uses read_client_connection over the base client_connection" do
+        expect(DummyElasticSearchModel).to receive(:read_client_connection).and_call_original
+        DummyElasticSearchModel.where
+      end
+
       it "filters by index and type" do
         dummy_model1 = DummyElasticSearchModel.create!(my_string: "Hello")
         dummy_model2 = DummyElasticSearchModel.create!(my_string: "Hello2")

@@ -49,7 +49,7 @@ module ElasticsearchModels
 
       def insert!(body_hash, index)
         body_hash.is_a?(Hash) or raise ArgumentError, "body_hash must be of type Hash, was of type #{body_hash.class}."
-        response = client_connection.index(index: index, type: DEPRECATED_TYPE, body: body_hash)
+        response = write_client_connection.index(index: index, type: DEPRECATED_TYPE, body: body_hash)
         if response.dig("_shards", "successful").to_i > 0
           response
         else
@@ -58,11 +58,11 @@ module ElasticsearchModels
       end
 
       def where(**params)
-        Query::Response.new(client_connection.search(query_params(**params)), self)
+        Query::Response.new(read_client_connection.search(query_params(**params)), self)
       end
 
       def count(**params)
-        client_connection.count(query_params(**params))["count"]
+        read_client_connection.count(query_params(**params))["count"]
       end
 
       def distinct_values(field, additional_fields: [], where: {}, **params)
@@ -79,6 +79,14 @@ module ElasticsearchModels
 
       def client_connection
         raise NotImplementedError # Should return Elasticsearch::Client
+      end
+
+      def read_client_connection
+        client_connection
+      end
+
+      def write_client_connection
+        client_connection
       end
 
       def index_name
