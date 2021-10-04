@@ -1,0 +1,55 @@
+# Default pipeline from cli
+
+common_unit_tests: &common_unit_tests
+  <<: *common_agent
+  <<: *common_env
+  <<: *common_artifact
+common_agent: &common_agent
+  agents:
+    queue: ruby-mysql
+    ruby: 2.6.5
+    elasticsearch: 6.3.1
+common_artifact: &common_artifact
+  artifact_paths:
+    - spec/reports/*.xml
+common_env: &common_env
+  env:
+    ELASTICSEARCH_TEST_PORT: '9200'
+
+appraisal_commands: &appraisal_commands
+  - bundle install
+  - bundle exec appraisal install
+
+steps:
+- label: "Current Unit Tests"
+  <<: *common_unit_tests
+  commands:
+    - bundle install
+    - bundle exec rspec
+  notify:
+    - github_commit_status:
+      context: current-unit-tests
+- label: "Rails 4 Unit Tests"
+  <<: *common_unit_tests
+  commands:
+    - *appraisal_commands
+    - bundle exec appraisal rails-4 rake
+  notify:
+    - github_commit_status:
+      context: rails-4-unit-tests
+- label: "Rails 5 Unit Tests"
+  <<: *common_unit_tests
+  commands:
+    - *appraisal_commands
+    - bundle exec appraisal rails-5 rake
+  notify:
+    - github_commit_status:
+      context: rails-5-unit-tests
+- label: "Rails 6 Unit Tests"
+  <<: *common_unit_tests
+  commands:
+    - *appraisal_commands
+    - bundle exec appraisal rails-6 rake
+  notify:
+    - github_commit_status:
+      context: rails-6-unit-tests
