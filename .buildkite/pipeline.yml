@@ -33,7 +33,7 @@ steps:
   <<: *common_unit_tests
   commands:
     - *appraisal_commands
-    - bundle exec appraisal rails-4 rake
+    - bundle exec appraisal rails-4 rspec
   notify:
     - github_commit_status:
       context: rails-4-unit-tests
@@ -41,7 +41,7 @@ steps:
   <<: *common_unit_tests
   commands:
     - *appraisal_commands
-    - bundle exec appraisal rails-5 rake
+    - bundle exec appraisal rails-5 rspec
   notify:
     - github_commit_status:
       context: rails-5-unit-tests
@@ -49,7 +49,7 @@ steps:
   <<: *common_unit_tests
   commands:
     - *appraisal_commands
-    - bundle exec appraisal rails-6 rake
+    - bundle exec appraisal rails-6 rspec
   notify:
     - github_commit_status:
       context: rails-6-unit-tests
