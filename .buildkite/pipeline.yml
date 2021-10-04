@@ -1,9 +1,5 @@
 # Default pipeline from cli
 
-common_unit_tests: &common_unit_tests
-  <<: *common_agent
-  <<: *common_env
-  <<: *common_artifact
 common_agent: &common_agent
   agents:
     queue: ruby-mysql
@@ -15,6 +11,10 @@ common_artifact: &common_artifact
 common_env: &common_env
   env:
     ELASTICSEARCH_TEST_PORT: '9200'
+common_unit_tests: &common_unit_tests
+  <<: *common_agent
+  <<: *common_env
+  <<: *common_artifact
 
 appraisal_commands: &appraisal_commands
   - bundle install
