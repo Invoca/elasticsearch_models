@@ -27,9 +27,6 @@ steps:
   commands:
     - bundle install
     - bundle exec rspec
-  notify:
-    - github_commit_status:
-      context: current-unit-tests
 - label: "Rails 4 Unit Tests"
   <<: *common_unit_tests
   env:
