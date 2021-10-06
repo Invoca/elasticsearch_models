@@ -1,0 +1,73 @@
+# Default pipeline from cli
+
+common_agent: &common_agent
+  agents:
+    queue: ruby-mysql
+    ruby: 2.6.1
+    elasticsearch: 6.3.1
+common_artifact: &common_artifact
+  artifact_paths:
+    - spec/reports/rspec.xml
+common_env: &common_env
+  ELASTICSEARCH_TEST_PORT: '9200'
+common_unit_tests: &common_unit_tests
+  <<: *common_agent
+  <<: *common_artifact
+
+appraisal_commands: &appraisal_commands
+  - bundle install
+  - bundle exec appraisal install
+
+steps:
+- label: "Current Unit Tests"
+  <<: *common_unit_tests
+  env:
+    <<: *common_env
+    JUNIT_OUTPUT: spec/reports/current/rspec.xml
+  commands:
+    - bundle install
+    - bundle exec rspec
+- label: "Rails 4 Unit Tests"
+  <<: *common_unit_tests
+  env:
+    <<: *common_env
+    JUNIT_OUTPUT: spec/reports/rails-4/rspec.xml
+  commands:
+    - *appraisal_commands
+    - bundle exec appraisal rails-4 rspec
+- label: "Rails 5 Unit Tests"
+  <<: *common_unit_tests
+  env:
+    <<: *common_env
+    JUNIT_OUTPUT: spec/reports/rails-5/rspec.xml
+  commands:
+    - *appraisal_commands
+    - bundle exec appraisal rails-5 rspec
+- label: "Rails 6 Unit Tests"
+  <<: *common_unit_tests
+  env:
+    <<: *common_env
+    JUNIT_OUTPUT: spec/reports/rails-6/rspec.xml
+  commands:
+    - *appraisal_commands
+    - bundle exec appraisal rails-6 rspec
+
+  # Test Summary Annotate Plugin
+- wait: ~
+  continue_on_failure: true
+
+- label: Test Summary Annotate
+  timeout_in_minutes: 5
+  <<: *common_agent
+  plugins:
+    - invoca/test-summary#TECH-5520_optional_flag_to_run_native_instead_of_docker:
+        inputs:
+          - label: Current Unit Tests
+            artifact_path: spec/reports/current/rspec.xml
+          - label: Rails 4 Unit Tests
+            artifact_path: spec/reports/rails-4/rspec.xml
+          - label: Rails 5 Unit Tests
+            artifact_path: spec/reports/rails-5/rspec.xml
+          - label: Rails 6 Unit Tests
+            artifact_path: spec/reports/rails-6/rspec.xml
+        run_without_docker: true
