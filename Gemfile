@@ -1,11 +1,13 @@
 # frozen_string_literal: true
 
-source 'https://rubygems.org'
-source 'https://gem.fury.io/invoca'
-
 gemspec
 
-gem 'aggregate', source: 'https://gem.fury.io/invoca'
+source 'https://gem.fury.io/invoca' do
+  gem 'aggregate'
+end
+
+source 'https://rubygems.org'
+
 gem 'appraisal'
 gem 'elasticsearch-extensions'
 gem 'pry'
