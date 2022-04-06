@@ -1,56 +1,87 @@
-# Default pipeline from cli
-
-common_agent: &common_agent
-  agents:
-    queue: ruby-mysql
-    ruby: 2.6.1
-    elasticsearch: 6.3.1
-common_artifact: &common_artifact
-  artifact_paths:
-    - spec/reports/rspec.xml
-common_env: &common_env
-  ELASTICSEARCH_TEST_PORT: '9200'
-common_unit_tests: &common_unit_tests
-  <<: *common_agent
-  <<: *common_artifact
-
-appraisal_commands: &appraisal_commands
-  - bundle install
-  - bundle exec appraisal install
-
+---
 steps:
-- label: "Current Unit Tests"
-  <<: *common_unit_tests
+- label: ":ruby: 2.6 Unit Tests"
+  agents:
+    queue: ruby-2-6-es-7-10
+    elasticsearch: 7.10.1
+    ruby: 2.6
+  artifact_paths:
+  - spec/reports/**/*.xml
   env:
-    <<: *common_env
-    JUNIT_OUTPUT: spec/reports/current/rspec.xml
+    ELASTICSEARCH_TEST_PORT: '9200'
+    JUNIT_OUTPUT: spec/reports/{{matrix.gemfile}}/rspec.xml
+    BUNDLE_GEMFILE: "{{matrix.gemfile}}"
   commands:
     - bundle install
     - bundle exec rspec
-- label: "Rails 4 Unit Tests"
-  <<: *common_unit_tests
+  matrix:
+    setup:
+      gemfile:
+      - Gemfile
+      - gemfiles/rails_5.gemfile
+      - gemfiles/rails_6.gemfile
+
+- label: ":ruby: 2.7 Unit Tests"
+  agents:
+    queue: ruby-2-7-es-7-10
+    elasticsearch: 7.10.1
+    ruby: 2.7
+  artifact_paths:
+  - spec/reports/**/*.xml
   env:
-    <<: *common_env
-    JUNIT_OUTPUT: spec/reports/rails-4/rspec.xml
+    ELASTICSEARCH_TEST_PORT: '9200'
+    JUNIT_OUTPUT: spec/reports/{{matrix.gemfile}}/rspec.xml
+    BUNDLE_GEMFILE: "{{matrix.gemfile}}"
   commands:
-    - *appraisal_commands
-    - bundle exec appraisal rails-4 rspec
-- label: "Rails 5 Unit Tests"
-  <<: *common_unit_tests
+    - bundle install
+    - bundle exec rspec
+  matrix:
+    setup:
+      gemfile:
+      - Gemfile
+      - gemfiles/rails_5.gemfile
+      - gemfiles/rails_6.gemfile
+
+- label: ":ruby: 3.0 Unit Tests"
+  agents:
+    queue: ruby-3-0-es-7-10
+    elasticsearch: 7.10.1
+    ruby: 3.0
+  artifact_paths:
+  - spec/reports/**/*.xml
   env:
-    <<: *common_env
-    JUNIT_OUTPUT: spec/reports/rails-5/rspec.xml
+    ELASTICSEARCH_TEST_PORT: '9200'
+    JUNIT_OUTPUT: spec/reports/{{matrix.gemfile}}/rspec.xml
+    BUNDLE_GEMFILE: "{{matrix.gemfile}}"
   commands:
-    - *appraisal_commands
-    - bundle exec appraisal rails-5 rspec
-- label: "Rails 6 Unit Tests"
-  <<: *common_unit_tests
+    - bundle install
+    - bundle exec rspec
+  matrix:
+    setup:
+      gemfile:
+      - Gemfile
+      - gemfiles/rails_6.gemfile
+
+- label: ":ruby: 3.1 Unit Tests"
+  agents:
+    queue: ruby-3-1-es-7-10
+    elasticsearch: 7.10.1
+    ruby: 3.1
+  artifact_paths:
+  - spec/reports/**/*.xml
   env:
-    <<: *common_env
-    JUNIT_OUTPUT: spec/reports/rails-6/rspec.xml
+    ELASTICSEARCH_TEST_PORT: '9200'
+    JUNIT_OUTPUT: spec/reports/{{matrix.gemfile}}/rspec.xml
+    BUNDLE_GEMFILE: "{{matrix.gemfile}}"
   commands:
-    - *appraisal_commands
-    - bundle exec appraisal rails-6 rspec
+    - bundle install
+    - bundle exec rspec
+  matrix:
+    setup:
+      gemfile:
+      - Gemfile
+      - gemfiles/rails_6.gemfile
+
 
   # Test Summary Annotate Plugin
 - wait: ~
@@ -58,16 +89,11 @@ steps:
 
 - label: Test Summary Annotate
   timeout_in_minutes: 5
-  <<: *common_agent
+  agents:
+    queue: ruby-2-6
   plugins:
-    - invoca/test-summary#TECH-5520_optional_flag_to_run_native_instead_of_docker:
-        inputs:
-          - label: Current Unit Tests
-            artifact_path: spec/reports/current/rspec.xml
-          - label: Rails 4 Unit Tests
-            artifact_path: spec/reports/rails-4/rspec.xml
-          - label: Rails 5 Unit Tests
-            artifact_path: spec/reports/rails-5/rspec.xml
-          - label: Rails 6 Unit Tests
-            artifact_path: spec/reports/rails-6/rspec.xml
-        run_without_docker: true
+  - bugcrowd/test-summary#master:
+      inputs:
+        - label: Unit Tests
+          artifact_path: spec/reports/**/rspec.xml
+      run_without_docker: true
