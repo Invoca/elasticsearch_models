@@ -1,10 +1,10 @@
 ---
 steps:
-- label: ":ruby: 2.6 Unit Tests"
+- label: ":ruby: 2.6 {{matrix.gemfile}} Unit Tests"
   agents:
-    queue: ruby-2-6-es-7-10
-    elasticsearch: 7.10.1
+    queue: ruby-2-6-mysql
     ruby: 2.6
+    elasticsearch: 6.3.1
   artifact_paths:
   - spec/reports/**/*.xml
   env:
@@ -24,11 +24,11 @@ steps:
       - gemfiles/rails_5.gemfile
       - gemfiles/rails_6.gemfile
 
-- label: ":ruby: 2.7 Unit Tests"
+- label: ":ruby: 2.7 {{matrix.gemfile}} Unit Tests"
   agents:
-    queue: ruby-2-7-es-7-10
-    elasticsearch: 7.10.1
+    queue: ruby-2-7-mysql
     ruby: 2.7
+    elasticsearch: 6.3.1
   artifact_paths:
   - spec/reports/**/*.xml
   env:
@@ -45,11 +45,11 @@ steps:
       - gemfiles/rails_5.gemfile
       - gemfiles/rails_6.gemfile
 
-- label: ":ruby: 3.0 Unit Tests"
+- label: ":ruby: 3.0 {{matrix.gemfile}} Unit Tests"
   agents:
-    queue: ruby-3-0-es-7-10
-    elasticsearch: 7.10.1
+    queue: ruby-3-0-mysql
     ruby: '3.0'
+    elasticsearch: 6.3.1
   artifact_paths:
   - spec/reports/**/*.xml
   env:
@@ -65,11 +65,11 @@ steps:
       - Gemfile
       - gemfiles/rails_6.gemfile
 
-- label: ":ruby: 3.1 Unit Tests"
+- label: ":ruby: 3.1 {{matrix.gemfile}} Unit Tests"
   agents:
-    queue: ruby-3-1-es-7-10
-    elasticsearch: 7.10.1
+    queue: ruby-3-1-mysql
     ruby: 3.1
+    elasticsearch: 6.3.1
   artifact_paths:
   - spec/reports/**/*.xml
   env:
