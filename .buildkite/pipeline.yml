@@ -49,7 +49,7 @@ steps:
   agents:
     queue: ruby-3-0-es-7-10
     elasticsearch: 7.10.1
-    ruby: 3.0
+    ruby: '3.0'
   artifact_paths:
   - spec/reports/**/*.xml
   env:
