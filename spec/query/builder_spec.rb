@@ -9,7 +9,7 @@ RSpec.describe ElasticsearchModels::Query::Builder do
   end
 
   def new_builder(**params)
-    ElasticsearchModels::Query::Builder.new({ _indices: "index" }.merge(params))
+    ElasticsearchModels::Query::Builder.new(**{ _indices: "index" }.merge(params))
   end
 
   context "Query::Builder" do
@@ -373,12 +373,12 @@ RSpec.describe ElasticsearchModels::Query::Builder do
         }
         expected_params = expected_query_body(bool_body: bool_body)
         params = { term1: true, term2: { a: { b: 1, c: 2 } }, term3: [1, { a: { b: 2, c: { d: (1..2) } } }], term4: [:a, :b] }
-        expect(new_builder(params).search_params).to eq(expected_params)
+        expect(new_builder(**params).search_params).to eq(expected_params)
       end
     end
 
     context "with _aggs provided" do
-      subject(:search_params) { new_builder(search_options).search_params }
+      subject(:search_params) { new_builder(**search_options).search_params }
       let(:search_options) { { _aggs: _aggs } }
       let(:_aggs) { "some.field.keyword" }
       let(:expected_inner_aggs) do

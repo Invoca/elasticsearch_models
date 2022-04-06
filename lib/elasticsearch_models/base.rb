@@ -125,7 +125,7 @@ module ElasticsearchModels
 
       def query_params(**params)
         params_with_indices = params[:_indices] ? params : params.merge(_indices: index_name)
-        Query::Builder.new(params_with_indices.merge(query_types: search_type)).search_params
+        Query::Builder.new(**params_with_indices.merge(query_types: search_type)).search_params
       end
 
       def distinct_values_response(aggregations, additional_field_names: [])

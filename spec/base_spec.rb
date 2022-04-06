@@ -869,7 +869,7 @@ RSpec.describe ElasticsearchModels::Base do
       end
 
       context "with a search query" do
-        subject(:response) { DummyElasticSearchModel.where(match_conditions.merge(_q: query_conditions)) }
+        subject(:response) { DummyElasticSearchModel.where(**match_conditions.merge(_q: query_conditions)) }
         let(:match_conditions) { {} }
 
         context "string searching" do
@@ -1354,7 +1354,7 @@ RSpec.describe ElasticsearchModels::Base do
     end
 
     describe ".distinct_values" do
-      subject(:distinct_values) { DummyElasticSearchModel.distinct_values(field, options) }
+      subject(:distinct_values) { DummyElasticSearchModel.distinct_values(field, **options) }
       let(:field) { "my_string.keyword" }
       let(:options) do
         {
@@ -1612,7 +1612,7 @@ RSpec.describe ElasticsearchModels::Base do
 
         it "allows for partitioned responses" do
           expect(distinct_values).to eq("my_string.keyword" => ["Hello", "This is a test", "Hello again", "How are you?"])
-          expect(DummyElasticSearchModel.distinct_values(field, options.merge(partition: 1))).to eq("my_string.keyword" => ["Hey"])
+          expect(DummyElasticSearchModel.distinct_values(field, **options.merge(partition: 1))).to eq("my_string.keyword" => ["Hey"])
         end
       end
 
