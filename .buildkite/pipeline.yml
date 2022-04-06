@@ -99,4 +99,5 @@ steps:
       inputs:
         - label: Unit Tests
           artifact_path: spec/reports/**/rspec.xml
+          type: junit
       run_without_docker: true
