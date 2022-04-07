@@ -4,7 +4,7 @@ Inspired by [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 Note: This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.3.0] - Unreleased
+## [2.3.0] - 2022-04-07
 ### Added
 - Added support for ruby 2.7+
 
