@@ -71,33 +71,3 @@ On the Management page, click "Create index pattern".
 When it asks for a regex to determine what indices to show you, you can enter `*` to show all or specify which index/indices.
 
 If the indices for your pattern have a time field, select the appropriate time field filter or select "I don't want to use the Time Filter".
-
-## Semaphore CI Setup
-Semaphore CI has Elasticsearch available by default. Because of Semaphore's configuration of Elasticsearch, `elasticsearch-extensions` (the gem used to run Elasticsearch in test runs) can not correctly find and access it using `which elasticsearch` and so we need to have some customization in place for tests to run correctly.
-
-* In the CI setup steps we need to make the Semaphore elasticsearch binary and config readable for `elasticsearch-extensions`.
-
-```shell
-sudo chmod 555 -R /etc/elasticsearch
-```
-
-* Then we use an environment variable `SEMAPHORE_CI_ELASTICSEARCH` to indicate that we should add additional commands to the `elasticsearch-extensions` cluster startup and shutdown.
-
-```ruby
-cluster_commands =
-  if ENV["SEMAPHORE_CI_ELASTICSEARCH"].present?
-    { command: "/usr/share/elasticsearch/bin/elasticsearch", es_params: "-E path.conf=/etc/elasticsearch/" }
-  else
-    {}
-  end
-```
-
-```ruby
-# startup
-Elasticsearch::Extensions::Test::Cluster.start(cluster_commands.merge(port: 9250, number_of_nodes: 1, timeout: 20))
-```
-
-```ruby
-# shutdown
-Elasticsearch::Extensions::Test::Cluster.stop(cluster_commands.merge(port: 9250))
-```

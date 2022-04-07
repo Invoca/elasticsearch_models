@@ -10,7 +10,7 @@ RSpec.describe ElasticsearchModels::Query::AggregationTerm do
   let(:missing) { }
 
   describe "#initialize" do
-    subject(:aggregation) { ElasticsearchModels::Query::AggregationTerm.new(options) }
+    subject(:aggregation) { ElasticsearchModels::Query::AggregationTerm.new(**options) }
 
     it { should be }
     it { should have_attributes(field: field) }
@@ -25,7 +25,7 @@ RSpec.describe ElasticsearchModels::Query::AggregationTerm do
       end
 
       context "as nil" do
-        subject(:aggregation) { ElasticsearchModels::Query::AggregationTerm.new(options.merge(field: nil)) }
+        subject(:aggregation) { ElasticsearchModels::Query::AggregationTerm.new(**options.merge(field: nil)) }
 
         it "raises ArgumentError" do
           expect { aggregation }.to raise_error(ArgumentError, "field must be provided")
@@ -80,7 +80,7 @@ RSpec.describe ElasticsearchModels::Query::AggregationTerm do
 
   describe "#term" do
     subject(:term) { aggregation.term }
-    let(:aggregation) { ElasticsearchModels::Query::AggregationTerm.new(options) }
+    let(:aggregation) { ElasticsearchModels::Query::AggregationTerm.new(**options) }
     let(:expected_term) { { field => { terms: expected_inner_terms } } }
     let(:expected_inner_terms) { { field: "some.field.keyword" } }
 

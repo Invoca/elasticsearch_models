@@ -1,17 +1,18 @@
 # frozen_string_literal: true
 
-source 'https://rubygems.org'
-source 'https://gem.fury.io/invoca'
-
 gemspec
 
-gem 'aggregate', source: 'https://gem.fury.io/invoca'
+source 'https://gem.fury.io/invoca' do
+  gem 'aggregate'
+end
+
+source 'https://rubygems.org'
+
 gem 'appraisal'
-gem 'bundler',                 '~> 1.16'
 gem 'elasticsearch-extensions'
 gem 'pry'
 gem 'pry-byebug'
-gem 'rake',                    '~> 10.0'
+gem 'rake'
 gem 'rspec',                   '~> 3.0'
 gem "rspec_junit_formatter",   "~> 0.4"
 gem 'rubocop',                 '0.74.0', require: false

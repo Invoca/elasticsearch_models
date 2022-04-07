@@ -39,7 +39,7 @@ module ElasticsearchModels
 
         def term_for_hash(condition)
           sub_aggs = condition.delete(:aggs)
-          AggregationTerm.new(condition).term.tap do |agg|
+          AggregationTerm.new(**condition).term.tap do |agg|
             agg.values.first.merge!(terms_for(sub_aggs)) if sub_aggs
           end
         end

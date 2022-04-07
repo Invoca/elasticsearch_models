@@ -109,7 +109,7 @@ RSpec.describe ElasticsearchModels::Query::Aggregations do
       context "and field is not provided" do
         let(:condition) { { size: 10_000 } }
         it "raises an ArgumentError" do
-          expect { terms }.to raise_error(ArgumentError, "missing keyword: field")
+          expect { terms }.to raise_error(ArgumentError, /missing keyword: :?field/)
         end
       end
 
@@ -311,7 +311,7 @@ RSpec.describe ElasticsearchModels::Query::Aggregations do
         let(:condition) { { field: "some.field.keyword", invalid: "key" } }
 
         it "raises an ArgumentError" do
-          expect { terms }.to raise_error(ArgumentError, "unknown keyword: invalid")
+          expect { terms }.to raise_error(ArgumentError, /unknown keyword: :?invalid/)
         end
       end
     end
