@@ -22,13 +22,15 @@ Java HotSpot(TM) 64-Bit Server VM (build 25.192-b12, mixed mode)
 Install Java8 if not installed already
 
 ```shell
-brew cask install homebrew/cask-versions/adoptopenjdk8
+brew tap adoptopenjdk/openjdk
+brew install adoptopenjdk8
 ```
 
 Now install Elasticsearch
 
 ```
-brew install elasticsearch
+brew install elasticsearch@6 # for 6
+brew install elasticsearch # for 7
 ```
 
 You should now be able to run tests involving Elasticsearch. Test setup should default to using port `9250` (so it does not conflict with the default local port `9200`).
