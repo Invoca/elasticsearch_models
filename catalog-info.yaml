@@ -14,7 +14,7 @@ apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
   name: elasticsearch_models-gem
-  title: ElasticsearchModel
+  title: ElasticsearchModels
   description: Represent Elasticsearch documents as ruby models using Aggregate
   tags:
   - ruby
