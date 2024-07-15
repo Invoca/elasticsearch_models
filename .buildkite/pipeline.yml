@@ -8,5 +8,4 @@ steps:
       - ssh://git@github.com/Invoca/invoca-ruby-test-matrix-buildkite-plugin.git#main:
           min_ruby_version: '3.1'
           slack_notification_channel: '#dev-team-release-backend-tools-octothorpe'
-          test_command: 'RAILS_ENV=test bundle exec rake db:drop db:create db:migrate spec'
           queue_variant: mysql
