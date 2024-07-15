@@ -35,9 +35,9 @@ module ElasticsearchClusterSpecHelper
       @elasticsearch_test_client = Elasticsearch::Client.new(host: ELASTICSEARCH_TEST_LOCALHOST, port: ELASTICSEARCH_TEST_PORT, scheme: "http")
 
       count = 0
-      while !@elasticsearch_test_client.ping
+      until @elasticsearch_test_client.ping
         count += 1
-        raise "Elasticsearch not ready after 5 tries" if count > 5
+        raise "Elasticsearch not ready after 5 tries" if count > 200
         puts "Waiting for Elasticsearch to be ready... Attempt #{count}, sleeping 1 second"
         sleep 1
       end
