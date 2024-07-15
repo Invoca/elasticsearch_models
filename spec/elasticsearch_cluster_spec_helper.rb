@@ -37,7 +37,7 @@ module ElasticsearchClusterSpecHelper
       count = 0
       until @elasticsearch_test_client.ping
         count += 1
-        raise "Elasticsearch not ready after 5 tries" if count > 200
+        raise "Elasticsearch not ready after 60 tries" if count > 60
         puts "Waiting for Elasticsearch to be ready... Attempt #{count}, sleeping 1 second"
         sleep 1
       end
