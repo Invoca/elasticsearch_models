@@ -12,6 +12,7 @@ source PRIVATE_GEM_SERVER do
 end
 
 gem 'appraisal'
+gem 'appraisal-matrix'
 gem 'elasticsearch-extensions'
 gem 'pry'
 gem 'pry-byebug'

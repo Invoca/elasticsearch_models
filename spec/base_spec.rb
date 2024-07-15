@@ -71,7 +71,7 @@ RSpec.describe ElasticsearchModels::Base do
       end
 
       def client_connection
-        @client_connection ||= Elasticsearch::Client.new(host: "127.0.0.1", port: ENV["ELASTICSEARCH_TEST_PORT"] || 9250, scheme: "http")
+        @client_connection ||= Elasticsearch::Client.new(host: "127.0.0.1", port: ENV["ELASTICSEARCH_TEST_PORT"] || 9200, scheme: "http")
       end
 
       def model_class_from_name(class_name)
@@ -112,11 +112,11 @@ RSpec.describe ElasticsearchModels::Base do
   class DummyDiffClientConnectionModel < DummyElasticSearchModel
     class << self
       def read_client_connection
-        @read_client_connection ||= Elasticsearch::Client.new(host: "127.0.0.1", port: ENV["ELASTICSEARCH_TEST_PORT"] || 9250, scheme: "http", request_timeout: 10)
+        @read_client_connection ||= Elasticsearch::Client.new(host: "127.0.0.1", port: ENV["ELASTICSEARCH_TEST_PORT"] || 9200, scheme: "http", request_timeout: 10)
       end
 
       def write_client_connection
-        @write_client_connection ||= Elasticsearch::Client.new(host: "127.0.0.1", port: ENV["ELASTICSEARCH_TEST_PORT"] || 9250, scheme: "http", request_timeout: 5)
+        @write_client_connection ||= Elasticsearch::Client.new(host: "127.0.0.1", port: ENV["ELASTICSEARCH_TEST_PORT"] || 9200, scheme: "http", request_timeout: 5)
       end
     end
   end

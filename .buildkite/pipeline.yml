@@ -8,5 +8,5 @@ steps:
       - ssh://git@github.com/Invoca/invoca-ruby-test-matrix-buildkite-plugin.git#main:
           min_ruby_version: '3.1'
           slack_notification_channel: '#dev-team-call-interactions-thundercats'
-          test_command: 'ELASTICSEARCH_TEST_PORT=9200 bundle exec rspec'
+          test_command: 'bundle exec rspec'
           queue_variant: mysql
