@@ -11,6 +11,8 @@ source PRIVATE_GEM_SERVER do
   gem 'aggregate'
 end
 
+source PUBLIC_GEM_SERVER
+
 gem 'appraisal'
 gem 'appraisal-matrix'
 gem 'elasticsearch-extensions'
