@@ -9,4 +9,4 @@ steps:
           min_ruby_version: '3.1'
           slack_notification_channel: '#dev-team-call-interactions-thundercats'
           test_command: 'bundle exec rspec'
-          queue_variant: mysql
+          queue_variant: es-6-3
