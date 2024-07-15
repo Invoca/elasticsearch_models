@@ -1,12 +1,15 @@
 # frozen_string_literal: true
 
+PUBLIC_GEM_SERVER = 'https://rubygems.org'
+PRIVATE_GEM_SERVER = 'https://gem.fury.io/invoca'
+
+source PUBLIC_GEM_SERVER
+
 gemspec
 
-source 'https://gem.fury.io/invoca' do
+source PRIVATE_GEM_SERVER do
   gem 'aggregate'
 end
-
-source 'https://rubygems.org'
 
 gem 'appraisal'
 gem 'elasticsearch-extensions'
