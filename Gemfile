@@ -1,19 +1,23 @@
 # frozen_string_literal: true
 
+PUBLIC_GEM_SERVER = 'https://rubygems.org'
+PRIVATE_GEM_SERVER = 'https://gem.fury.io/invoca'
+
+source PUBLIC_GEM_SERVER
+
 gemspec
 
-source 'https://gem.fury.io/invoca' do
+source PRIVATE_GEM_SERVER do
   gem 'aggregate'
 end
 
-source 'https://rubygems.org'
-
 gem 'appraisal'
+gem 'appraisal-matrix'
 gem 'elasticsearch-extensions'
 gem 'pry'
 gem 'pry-byebug'
 gem 'rake'
-gem 'rspec',                   '~> 3.0'
-gem "rspec_junit_formatter",   "~> 0.4"
-gem 'rubocop',                 '0.74.0', require: false
+gem 'rspec'
+gem "rspec_junit_formatter"
+gem 'rubocop', require: false
 gem 'rubocop-git', require: false

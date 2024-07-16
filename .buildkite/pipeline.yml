@@ -1,103 +1,12 @@
 ---
 steps:
-- label: ":ruby: 2.6 {{matrix.gemfile}} Unit Tests"
-  agents:
-    queue: ruby-2-6-mysql
-    ruby: 2.6
-    elasticsearch: 6.3.1
-  artifact_paths:
-  - spec/reports/**/*.xml
-  env:
-    ELASTICSEARCH_TEST_PORT: '9200'
-    JUNIT_OUTPUT: spec/reports/{{matrix.gemfile}}/rspec.xml
-    BUNDLE_GEMFILE: "{{matrix.gemfile}}"
-  commands:
-    - gem install bundler -v 2.2.29 --default
-    - gem update --system
-    - gem uninstall -i /usr/local/lib/ruby/gems/2.6.0 bundler
-    - bundle install
-    - bundle exec rspec
-  matrix:
-    setup:
-      gemfile:
-      - Gemfile
-      - gemfiles/rails_5.gemfile
-      - gemfiles/rails_6_0.gemfile
-
-- label: ":ruby: 2.7 {{matrix.gemfile}} Unit Tests"
-  agents:
-    queue: ruby-2-7-mysql
-    ruby: 2.7
-    elasticsearch: 6.3.1
-  artifact_paths:
-  - spec/reports/**/*.xml
-  env:
-    ELASTICSEARCH_TEST_PORT: '9200'
-    JUNIT_OUTPUT: spec/reports/{{matrix.gemfile}}/rspec.xml
-    BUNDLE_GEMFILE: "{{matrix.gemfile}}"
-  commands:
-    - bundle install
-    - bundle exec rspec
-  matrix:
-    setup:
-      gemfile:
-      - Gemfile
-      - gemfiles/rails_5.gemfile
-      - gemfiles/rails_6_0.gemfile
-
-- label: ":ruby: 3.0 {{matrix.gemfile}} Unit Tests"
-  agents:
-    queue: ruby-3-0-mysql
-    ruby: '3.0'
-    elasticsearch: 6.3.1
-  artifact_paths:
-  - spec/reports/**/*.xml
-  env:
-    ELASTICSEARCH_TEST_PORT: '9200'
-    JUNIT_OUTPUT: spec/reports/{{matrix.gemfile}}/rspec.xml
-    BUNDLE_GEMFILE: "{{matrix.gemfile}}"
-  commands:
-    - bundle install
-    - bundle exec rspec
-  matrix:
-    setup:
-      gemfile:
-      - Gemfile
-      - gemfiles/rails_6_0.gemfile
-
-- label: ":ruby: 3.1 {{matrix.gemfile}} Unit Tests"
-  agents:
-    queue: ruby-3-1-mysql
-    ruby: 3.1
-    elasticsearch: 6.3.1
-  artifact_paths:
-  - spec/reports/**/*.xml
-  env:
-    ELASTICSEARCH_TEST_PORT: '9200'
-    JUNIT_OUTPUT: spec/reports/{{matrix.gemfile}}/rspec.xml
-    BUNDLE_GEMFILE: "{{matrix.gemfile}}"
-  commands:
-    - bundle install
-    - bundle exec rspec
-  matrix:
-    setup:
-      gemfile:
-      - Gemfile
-      - gemfiles/rails_6_0.gemfile
-
-
-  # Test Summary Annotate Plugin
-- wait: ~
-  continue_on_failure: true
-
-- label: Test Summary Annotate
-  timeout_in_minutes: 5
-  agents:
-    queue: ruby-2-6
-  plugins:
-  - bugcrowd/test-summary#master:
-      inputs:
-        - label: Unit Tests
-          artifact_path: spec/reports/**/rspec.xml
-          type: junit
-      run_without_docker: true
+  - label: ":ruby: Render Test Matrix"
+    timeout_in_minutes: 5
+    env:
+      RAILS_ENV: test
+    plugins:
+      - ssh://git@github.com/Invoca/invoca-ruby-test-matrix-buildkite-plugin.git#main:
+          min_ruby_version: '3.1'
+          slack_notification_channel: '#dev-team-call-interactions-thundercats'
+          test_command: 'bundle exec rspec'
+          queue_variant: es-6-3
