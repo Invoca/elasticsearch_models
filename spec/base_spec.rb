@@ -319,10 +319,15 @@ RSpec.describe ElasticsearchModels::Base do
         }
         expect(dummy_connection).to receive(:index).and_return(error_response)
 
-        expected_error = "Error creating elasticsearch model. Body: {\"rehydration_class\"=>\"DummyElasticSearchModel\", "\
-                         "\"query_types\"=>[\"DummyElasticSearchModel\"], \"my_string\"=>\"Hello\", \"my_required\"=>\"Required\", "\
-                         "\"my_bool\"=>false, \"my_hash\"=>\"{}\", \"data_schema_version\"=>\"1.0\"}. "\
-                         "Response: {\"_shards\"=>{\"total\"=>2, \"successful\"=>0, \"failed\"=>1}}"
+        expected_body_hash = { "rehydration_class" => "DummyElasticSearchModel",
+                               "query_types" => ["DummyElasticSearchModel"], "my_string" => "Hello", "my_required" => "Required",
+                               "my_bool" => false, "my_hash" => "{}", "data_schema_version" => "1.0" }
+
+        expected_response_hash = { "_shards" => { "total" => 2, "successful" => 0, "failed" => 1 } }
+
+        expected_error = "Error creating elasticsearch model. Body: #{expected_body_hash}. "\
+                         "Response: #{expected_response_hash}"
+
         expect { DummyElasticSearchModel.create!(my_string: "Hello") }.to raise_error(ElasticsearchModels::Base::CreateError, expected_error)
       end
 
@@ -614,10 +619,14 @@ RSpec.describe ElasticsearchModels::Base do
         error_response = { "_shards" => { "total" => 2, "successful" => 0, "failed" => 1 } }
         expect(dummy_connection).to receive(:index).and_return(error_response)
 
-        expected_error = "Error creating elasticsearch model. Body: {\"rehydration_class\"=>\"DummyElasticSearchModel\", "\
-                         "\"query_types\"=>[\"DummyElasticSearchModel\"], \"my_string\"=>\"Hello\", \"my_required\"=>\"Required\", "\
-                         "\"my_bool\"=>false, \"my_hash\"=>\"{}\", \"data_schema_version\"=>\"1.0\"}. "\
-                         "Response: {\"_shards\"=>{\"total\"=>2, \"successful\"=>0, \"failed\"=>1}}"
+        expected_body_hash = { "rehydration_class" => "DummyElasticSearchModel",
+                               "query_types" => ["DummyElasticSearchModel"], "my_string" => "Hello", "my_required" => "Required",
+                               "my_bool" => false, "my_hash" => "{}", "data_schema_version" => "1.0" }
+
+        expected_response_hash = { "_shards" => { "total" => 2, "successful" => 0, "failed" => 1 } }
+
+        expected_error = "Error creating elasticsearch model. Body: #{expected_body_hash}. "\
+                         "Response: #{expected_response_hash}"
         expect { DummyElasticSearchModel.insert!(dummy_model.deep_squash_to_store, dummy_model.index_name) }
           .to raise_error(ElasticsearchModels::Base::CreateError, expected_error)
       end

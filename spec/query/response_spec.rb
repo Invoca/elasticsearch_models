@@ -108,10 +108,10 @@ RSpec.describe ElasticsearchModels::Query::Response do
 
         expect(query_response.models.count).to eq(1)
         expect(query_response.errors.count).to eq(1)
-        expected_error_message = "Error rehydrating model from query response hit. Hit: {\"_index\"=>\"test_index\", "\
-                                 "\"_type\"=>\"ElasticsearchModel\", \"_id\"=>\"i5JhrmcBUU6q7YBzawfu\", "\
-                                 "\"_score\"=>4.2685113, \"_source\"=>{\"my_string\"=>\"Hello\", \"my_bool\"=>false, "\
-                                 "\"my_int\"=>150, \"rehydration_class\"=>\"invalid class\"}}."
+        expected_hash = { "_index" => "test_index", "_type" => "ElasticsearchModel", "_id" => "i5JhrmcBUU6q7YBzawfu",
+                          "_score" => 4.2685113, "_source" => { "my_string" => "Hello", "my_bool" => false, "my_int" => 150,
+                                                                "rehydration_class" => "invalid class" } }
+        expected_error_message = "Error rehydrating model from query response hit. Hit: #{expected_hash}."
         expect(query_response.errors.first.message).to eq(expected_error_message)
         expect(query_response.errors.first.original_exception.is_a?(NameError)).to be(true)
       end
